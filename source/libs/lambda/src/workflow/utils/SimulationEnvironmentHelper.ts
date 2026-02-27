@@ -95,6 +95,7 @@ class SimulationEnvironmentHelper {
     simEnvVars.MODEL_S3_BUCKET = sageMakerArtifactsS3Location.bucket;
     simEnvVars.MODEL_S3_PREFIX = sageMakerArtifactsS3Location.key;
     simEnvVars.NUMBER_OF_TRIALS = terminationConditions.maxLaps;
+    simEnvVars.EVAL_CHECKPOINT = 'last';
   }
 
   private addTrainingSpecificVariables(simEnvVars: Partial<SimulationEnvironmentVariables>, modelItem: ModelItem) {
