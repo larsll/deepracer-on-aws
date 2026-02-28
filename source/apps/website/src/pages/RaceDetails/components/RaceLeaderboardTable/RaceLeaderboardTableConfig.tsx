@@ -6,6 +6,7 @@ import Button from '@cloudscape-design/components/button';
 import CollectionPreferences, {
   CollectionPreferencesProps,
 } from '@cloudscape-design/components/collection-preferences';
+import SpaceBetween from '@cloudscape-design/components/space-between';
 import { TableProps } from '@cloudscape-design/components/table';
 import { Ranking, Leaderboard } from '@deepracer-indy/typescript-client';
 import { useMemo, useState } from 'react';
@@ -16,6 +17,27 @@ import TableEmptyState from '#components/TableEmptyState/TableEmptyState.js';
 import { PageId } from '#constants/pages.js';
 import { getRacingTimeGap, millisToMinutesAndSeconds } from '#utils/dateTimeUtils.js';
 import { getPath } from '#utils/pageUtils.js';
+
+const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9-_]/g, '_');
+
+const formatTimestamp = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}_${String(d.getHours()).padStart(2, '0')}-${String(d.getMinutes()).padStart(2, '0')}-${String(d.getSeconds()).padStart(2, '0')}`;
+
+const downloadVideo = async (url: string, filename: string) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(blobUrl);
+};
+
+export interface SelectedVideo {
+  url: string;
+  title: string;
+}
 
 enum RaceLeaderboardTableColumn {
   RANK = 'Rank',
@@ -29,6 +51,7 @@ enum RaceLeaderboardTableColumn {
 export const useRaceLeaderboardTableConfig = (rankings: Ranking[], leaderboard: Leaderboard) => {
   const { t } = useTranslation('raceDetails');
   const navigate = useNavigate();
+  const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
 
   const pageSizeOptions: CollectionPreferencesProps.PageSizeOption[] = [
     { value: 10, label: t('raceLeaderboardTable.collectionPreferences.pageSizeOptionsLabel', { count: 10 }) },
@@ -112,8 +135,35 @@ export const useRaceLeaderboardTableConfig = (rankings: Ranking[], leaderboard: 
         cell: (e) => e.stats.offTrackCount,
         sortingComparator: (item1, item2) => item1.stats.offTrackCount - item2.stats.offTrackCount,
       },
+      {
+        id: RaceLeaderboardTableColumn.VIDEO,
+        header: t('raceLeaderboardTable.header.video'),
+        cell: (e) => (
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button
+              variant="icon"
+              iconName="video-on"
+              ariaLabel={t('videoModal.watchVideo')}
+              disabled={!e.videoUrl}
+              onClick={() => setSelectedVideo({ url: e.videoUrl, title: e.userProfile.alias })}
+            />
+            <Button
+              variant="icon"
+              iconName="download"
+              ariaLabel={t('videoModal.downloadVideo')}
+              disabled={!e.videoUrl}
+              onClick={() =>
+                void downloadVideo(
+                  e.videoUrl,
+                  `${sanitize(leaderboard.name)}_${sanitize(e.userProfile.alias)}_${e.submissionNumber}_${formatTimestamp(e.submittedAt)}.mp4`,
+                )
+              }
+            />
+          </SpaceBetween>
+        ),
+      },
     ],
-    [rankings, t],
+    [rankings, t, setSelectedVideo, leaderboard],
   );
 
   const RaceLeaderboardTablePreferences = () => (
@@ -152,6 +202,10 @@ export const useRaceLeaderboardTableConfig = (rankings: Ranking[], leaderboard: 
             id: RaceLeaderboardTableColumn.OFF_TRACK,
             label: t('raceLeaderboardTable.header.offtrack'),
           },
+          {
+            id: RaceLeaderboardTableColumn.VIDEO,
+            label: t('raceLeaderboardTable.header.video'),
+          },
         ],
       }}
     />
@@ -167,5 +221,7 @@ export const useRaceLeaderboardTableConfig = (rankings: Ranking[], leaderboard: 
     RaceLeaderboardTablePreferences,
     filteredItemsCount,
     filterProps,
+    selectedVideo,
+    setSelectedVideo,
   };
 };
