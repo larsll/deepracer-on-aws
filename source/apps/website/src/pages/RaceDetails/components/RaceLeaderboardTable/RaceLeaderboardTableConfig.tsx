@@ -141,14 +141,14 @@ export const useRaceLeaderboardTableConfig = (rankings: Ranking[], leaderboard: 
         cell: (e) => (
           <SpaceBetween direction="horizontal" size="xs">
             <Button
-              variant="icon"
-              iconName="video-on"
+              variant="link"
+              iconName="play"
               ariaLabel={t('videoModal.watchVideo')}
               disabled={!e.videoUrl}
               onClick={() => setSelectedVideo({ url: e.videoUrl, title: e.userProfile.alias })}
             />
             <Button
-              variant="icon"
+              variant="link"
               iconName="download"
               ariaLabel={t('videoModal.downloadVideo')}
               disabled={!e.videoUrl}
