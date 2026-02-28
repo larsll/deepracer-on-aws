@@ -67,10 +67,20 @@
   },
   "submissionsTable": {
     "tableHeader": "Your submissions",
+    "refresh": "Refresh submissions",
     "header": {
       "modelName": "Model name",
+      "submissionNumber": "#",
       "time": "Time",
       "status": "Status",
+      "bestLapTime": "Best lap time",
+      "avgLapTime": "Average lap time",
+      "totalLapTime": "Total lap time",
+      "completedLaps": "Completed laps",
+      "resets": "Resets",
+      "avgResets": "Average resets",
+      "offTrack": "Off-track count",
+      "collisions": "Collision count",
       "date": "Date submitted to race",
       "video": "Video"
     },
@@ -104,14 +114,23 @@
     }
   },
   "raceLeaderboardTable": {
+    "refresh": "Refresh leaderboard",
     "header": {
-      "rank": "Rank",
+      "rank": "#",
       "racer": "Racer",
       "time": "Time",
       "gapToFirst": "Gap to 1st",
       "video": "Video",
       "offtrack": "Off-track",
-      "name": "{{name}} rankings"
+      "name": "{{name}} rankings",
+      "bestLapTime": "Best lap time",
+      "avgLapTime": "Average lap time",
+      "totalLapTime": "Total lap time",
+      "completedLaps": "Completed laps",
+      "resets": "Resets",
+      "avgResets": "Average resets",
+      "collisions": "Collision count",
+      "date": "Date submitted to race"
     },
     "emptySubtitle": "No racers have submitted a qualifying model to this race.",
     "emptyTitle": "No qualifying submissions",

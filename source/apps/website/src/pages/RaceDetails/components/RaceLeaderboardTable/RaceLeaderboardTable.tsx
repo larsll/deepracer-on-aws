@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import Button from '@cloudscape-design/components/button';
 import Header from '@cloudscape-design/components/header';
 import Pagination from '@cloudscape-design/components/pagination';
 import Table from '@cloudscape-design/components/table';
@@ -15,9 +16,11 @@ import { useRaceLeaderboardTableConfig } from './RaceLeaderboardTableConfig';
 interface RaceLeaderboardTableProps {
   rankings: Ranking[];
   leaderboard: Leaderboard;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-const RaceLeaderboardTable = ({ rankings, leaderboard }: RaceLeaderboardTableProps) => {
+const RaceLeaderboardTable = ({ rankings, leaderboard, onRefresh, isRefreshing }: RaceLeaderboardTableProps) => {
   const { t } = useTranslation('raceDetails');
 
   const {
@@ -48,7 +51,17 @@ const RaceLeaderboardTable = ({ rankings, leaderboard }: RaceLeaderboardTablePro
         columnDefinitions={columnDefinitions}
         columnDisplay={columnDisplay}
         header={
-          <Header counter={`(${rankings?.length ?? 0})`}>
+          <Header
+            counter={`(${rankings?.length ?? 0})`}
+            actions={
+              <Button
+                iconName="refresh"
+                onClick={onRefresh}
+                loading={isRefreshing}
+                ariaLabel={t('raceLeaderboardTable.refresh')}
+              />
+            }
+          >
             {t('raceLeaderboardTable.header.name', { name: leaderboard.name })}
           </Header>
         }

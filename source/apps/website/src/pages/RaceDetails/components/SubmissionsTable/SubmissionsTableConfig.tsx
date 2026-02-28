@@ -43,8 +43,17 @@ export interface SelectedVideo {
 
 enum SubmissionsTableColumn {
   MODEL_NAME = 'Model name',
+  SUBMISSION_NUMBER = 'Submission number',
   STATUS = 'Status',
   TIME = 'Time',
+  BEST_LAP_TIME = 'Best lap time',
+  AVG_LAP_TIME = 'Average lap time',
+  TOTAL_LAP_TIME = 'Total lap time',
+  COMPLETED_LAPS = 'Completed laps',
+  RESETS = 'Resets',
+  AVG_RESETS = 'Average resets',
+  OFF_TRACK = 'Off-track count',
+  COLLISIONS = 'Collision count',
   DATE = 'Date submitted to race',
   VIDEO = 'Video',
 }
@@ -62,11 +71,21 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
 
   const defaultPreferences: CollectionPreferencesProps.Preferences = {
     pageSize: 10,
-    visibleContent: [
-      SubmissionsTableColumn.MODEL_NAME,
-      SubmissionsTableColumn.STATUS,
-      SubmissionsTableColumn.TIME,
-      SubmissionsTableColumn.DATE,
+    contentDisplay: [
+      { id: SubmissionsTableColumn.SUBMISSION_NUMBER, visible: true },
+      { id: SubmissionsTableColumn.MODEL_NAME, visible: true },
+      { id: SubmissionsTableColumn.VIDEO, visible: true },
+      { id: SubmissionsTableColumn.TIME, visible: true },
+      { id: SubmissionsTableColumn.BEST_LAP_TIME, visible: false },
+      { id: SubmissionsTableColumn.AVG_LAP_TIME, visible: false },
+      { id: SubmissionsTableColumn.TOTAL_LAP_TIME, visible: false },
+      { id: SubmissionsTableColumn.COMPLETED_LAPS, visible: false },
+      { id: SubmissionsTableColumn.RESETS, visible: true },
+      { id: SubmissionsTableColumn.OFF_TRACK, visible: false },
+      { id: SubmissionsTableColumn.COLLISIONS, visible: false },
+      { id: SubmissionsTableColumn.AVG_RESETS, visible: false },
+      { id: SubmissionsTableColumn.STATUS, visible: true },
+      { id: SubmissionsTableColumn.DATE, visible: true },
     ],
   };
 
@@ -93,7 +112,7 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
     sorting: {
       defaultState: {
         sortingColumn: {
-          sortingComparator: (item1, item2) => item1.submittedAt.getTime() - item2.submittedAt.getTime(),
+          sortingField: 'submissionNumber',
         },
         isDescending: true,
       },
@@ -136,6 +155,93 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
         header: t('submissionsTable.header.status'),
         cell: (e) => <JobStatusIndicator status={e.status} />,
         sortingField: 'status',
+      },
+      {
+        id: SubmissionsTableColumn.SUBMISSION_NUMBER,
+        header: t('submissionsTable.header.submissionNumber'),
+        cell: (e) => e.submissionNumber,
+        sortingField: 'submissionNumber',
+        width: 40,
+      },
+      {
+        id: SubmissionsTableColumn.BEST_LAP_TIME,
+        header: t('submissionsTable.header.bestLapTime'),
+        cell: (e) => (e.stats ? millisToMinutesAndSeconds(e.stats.bestLapTime) : '–'),
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.bestLapTime - item2.stats.bestLapTime;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.AVG_LAP_TIME,
+        header: t('submissionsTable.header.avgLapTime'),
+        cell: (e) => (e.stats ? millisToMinutesAndSeconds(e.stats.avgLapTime) : '–'),
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.avgLapTime - item2.stats.avgLapTime;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.TOTAL_LAP_TIME,
+        header: t('submissionsTable.header.totalLapTime'),
+        cell: (e) => (e.stats ? millisToMinutesAndSeconds(e.stats.totalLapTime) : '–'),
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.totalLapTime - item2.stats.totalLapTime;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.COMPLETED_LAPS,
+        header: t('submissionsTable.header.completedLaps'),
+        cell: (e) => e.stats?.completedLapCount ?? '–',
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.completedLapCount - item2.stats.completedLapCount;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.RESETS,
+        header: t('submissionsTable.header.resets'),
+        cell: (e) => e.stats?.resetCount ?? '–',
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.resetCount - item2.stats.resetCount;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.AVG_RESETS,
+        header: t('submissionsTable.header.avgResets'),
+        cell: (e) => (e.stats ? e.stats.avgResets.toFixed(2) : '–'),
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.avgResets - item2.stats.avgResets;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.OFF_TRACK,
+        header: t('submissionsTable.header.offTrack'),
+        cell: (e) => e.stats?.offTrackCount ?? '–',
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.offTrackCount - item2.stats.offTrackCount;
+        },
+      },
+      {
+        id: SubmissionsTableColumn.COLLISIONS,
+        header: t('submissionsTable.header.collisions'),
+        cell: (e) => e.stats?.collisionCount ?? '–',
+        sortingComparator: (item1, item2) => {
+          if (!item1.stats) return 1;
+          if (!item2.stats) return -1;
+          return item1.stats.collisionCount - item2.stats.collisionCount;
+        },
       },
       {
         id: SubmissionsTableColumn.DATE,
@@ -198,8 +304,48 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
             alwaysVisible: true,
           },
           {
+            id: SubmissionsTableColumn.SUBMISSION_NUMBER,
+            label: t('submissionsTable.header.submissionNumber'),
+          },
+          {
+            id: SubmissionsTableColumn.VIDEO,
+            label: t('submissionsTable.header.video'),
+          },
+          {
             id: SubmissionsTableColumn.TIME,
             label: t('submissionsTable.header.time'),
+          },
+          {
+            id: SubmissionsTableColumn.BEST_LAP_TIME,
+            label: t('submissionsTable.header.bestLapTime'),
+          },
+          {
+            id: SubmissionsTableColumn.AVG_LAP_TIME,
+            label: t('submissionsTable.header.avgLapTime'),
+          },
+          {
+            id: SubmissionsTableColumn.TOTAL_LAP_TIME,
+            label: t('submissionsTable.header.totalLapTime'),
+          },
+          {
+            id: SubmissionsTableColumn.COMPLETED_LAPS,
+            label: t('submissionsTable.header.completedLaps'),
+          },
+          {
+            id: SubmissionsTableColumn.RESETS,
+            label: t('submissionsTable.header.resets'),
+          },
+          {
+            id: SubmissionsTableColumn.OFF_TRACK,
+            label: t('submissionsTable.header.offTrack'),
+          },
+          {
+            id: SubmissionsTableColumn.COLLISIONS,
+            label: t('submissionsTable.header.collisions'),
+          },
+          {
+            id: SubmissionsTableColumn.AVG_RESETS,
+            label: t('submissionsTable.header.avgResets'),
           },
           {
             id: SubmissionsTableColumn.STATUS,
@@ -208,10 +354,6 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
           {
             id: SubmissionsTableColumn.DATE,
             label: t('submissionsTable.header.date'),
-          },
-          {
-            id: SubmissionsTableColumn.VIDEO,
-            label: t('submissionsTable.header.video'),
           },
         ],
       }}
