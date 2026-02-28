@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import Button from '@cloudscape-design/components/button';
 import Header from '@cloudscape-design/components/header';
 import Pagination from '@cloudscape-design/components/pagination';
 import Table from '@cloudscape-design/components/table';
@@ -15,9 +16,11 @@ import { useSubmissionsTableConfig } from './SubmissionsTableConfig';
 interface SubmissionsTableProps {
   leaderboard: Leaderboard;
   submissions: Submission[];
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-const SubmissionsTable = ({ leaderboard, submissions }: SubmissionsTableProps) => {
+const SubmissionsTable = ({ leaderboard, submissions, onRefresh, isRefreshing }: SubmissionsTableProps) => {
   const { t } = useTranslation('raceDetails');
 
   const {
@@ -47,7 +50,21 @@ const SubmissionsTable = ({ leaderboard, submissions }: SubmissionsTableProps) =
         items={items}
         columnDefinitions={columnDefinitions}
         columnDisplay={columnDisplay}
-        header={<Header counter={`(${submissions?.length ?? 0})`}>{t('submissionsTable.tableHeader')}</Header>}
+        header={
+          <Header
+            counter={`(${submissions?.length ?? 0})`}
+            actions={
+              <Button
+                iconName="refresh"
+                onClick={onRefresh}
+                loading={isRefreshing}
+                ariaLabel={t('submissionsTable.refresh')}
+              />
+            }
+          >
+            {t('submissionsTable.tableHeader')}
+          </Header>
+        }
         trackBy="submissionNumber"
         pagination={
           <Pagination
