@@ -151,14 +151,14 @@ export const useSubmissionsTableConfig = (submissions: Submission[], leaderboard
           return (
             <SpaceBetween direction="horizontal" size="xs">
               <Button
-                variant="icon"
-                iconName="video-on"
+                variant="link"
+                iconName="play"
                 ariaLabel={t('videoModal.watchVideo')}
                 disabled={!available}
                 onClick={() => setSelectedVideo({ url: e.videoUrl, title: `${e.modelName} #${e.submissionNumber}` })}
               />
               <Button
-                variant="icon"
+                variant="link"
                 iconName="download"
                 ariaLabel={t('videoModal.downloadVideo')}
                 disabled={!available}
