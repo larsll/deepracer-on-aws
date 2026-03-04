@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Duplicate error toasts appearing for profile management operations (invite user, delete user, change role).
+- Duplicate error flashbar notifications appearing for profile management operations (invite user, delete user, change role).
 - Deployment failures in opt-in regions (af-south-1, ap-east-1, eu-south-2, me-south-1) where CloudFront access logging is not supported.
 - Excessive simulation logging by moving verbose Gazebo system messages to DEBUG level ([#15](https://github.com/aws-solutions/deepracer-on-aws/issues/15))
 
