@@ -2,6 +2,7 @@ build
 .DS_Store
 Thumbs.db
 ./nx
+bom.json
 
 # Dependency directories
 node_modules/
@@ -15,7 +16,9 @@ __pycache__/
 **/deployment/open-source
 **/deployment/ecr
 **/deployment/temp_checkout*
+deployment/launch-wizard-assets/Default/*/helpPanels.zip
 git-info
+source/apps/infra/cdk.out.*
 
 # local scripts
 script_*.sh
