@@ -25,11 +25,11 @@ import { getPath } from '#utils/pageUtils.js';
 
 const authValidationSchema = Yup.object().shape({
   password: Yup.string().required(i18n.t('auth:required')),
-  emailAddress: Yup.string().required(i18n.t('auth:required')).email(i18n.t('auth:validEmailAddress')),
+  username: Yup.string().required(i18n.t('auth:required')),
 });
 
 const initialAuthValues: SignInValues = {
-  emailAddress: '',
+  username: '',
   password: '',
 };
 const SignInForm = () => {
@@ -48,7 +48,7 @@ const SignInForm = () => {
     try {
       setIsLoadingSignIn(true);
       const signInResult = await signIn({
-        username: data.emailAddress,
+        username: data.username,
         password: data.password,
       });
 
@@ -73,7 +73,7 @@ const SignInForm = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <Container header={<Header variant="h2">{t('signin')}</Header>}>
         <SpaceBetween size="l">
-          <InputField type={'text'} name="emailAddress" control={control} label={t('email')} stretch />
+          <InputField type={'text'} name="username" control={control} label={t('emailOrUsername')} stretch />
           <InputField
             type={showPassword ? 'text' : 'password'}
             name="password"
