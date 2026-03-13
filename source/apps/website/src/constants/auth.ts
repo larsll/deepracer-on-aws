@@ -16,6 +16,6 @@ export interface AuthValues {
 }
 
 export interface SignInValues {
-  emailAddress: string;
+  username: string;
   password: string;
 }
