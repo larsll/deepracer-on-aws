@@ -4,11 +4,15 @@
 import Button from '@cloudscape-design/components/button';
 import Checkbox from '@cloudscape-design/components/checkbox';
 import Container from '@cloudscape-design/components/container';
+import FormField from '@cloudscape-design/components/form-field';
 import Header from '@cloudscape-design/components/header';
+import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { confirmSignIn } from 'aws-amplify/auth';
-import { useState } from 'react';
+import { confirmSignIn, updateUserAttributes } from 'aws-amplify/auth';
+import { getNames, registerLocale } from 'i18n-iso-countries';
+import enLocale from 'i18n-iso-countries/langs/en.json';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -65,13 +69,28 @@ const NewPasswordForm = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [countryError, setCountryError] = useState('');
+  const countryOptions = useMemo(() => {
+    registerLocale(enLocale);
+    return Object.entries(getNames('en', { select: 'official' })).map(([value, label]) => ({
+      value,
+      label: label as string,
+    }));
+  }, []);
 
   const onSubmit = async (data: NewPasswordValues) => {
+    if (!countryCode) {
+      setCountryError(t('countryRequired'));
+      return;
+    }
     try {
       setIsLoading(true);
       await confirmSignIn({
         challengeResponse: data.newPassword,
       });
+
+      await updateUserAttributes({ userAttributes: { 'custom:countryCode': countryCode } });
 
       // Update the user's profile with their chosen racer alias
       await updateProfile({
@@ -103,6 +122,25 @@ const NewPasswordForm = () => {
             constraintText={t('racerAliasConstraint')}
             stretch
           />
+          <FormField label={t('country')} errorText={countryError}>
+            <Select
+              selectedOption={
+                countryCode
+                  ? {
+                      value: countryCode,
+                      label: countryOptions.find((o) => o.value === countryCode)?.label ?? countryCode,
+                    }
+                  : null
+              }
+              onChange={({ detail }) => {
+                setCountryCode(detail.selectedOption.value ?? null);
+                setCountryError('');
+              }}
+              options={countryOptions}
+              filteringType="auto"
+              placeholder={t('countryPlaceholder')}
+            />
+          </FormField>
           <InputField
             type={showPassword ? 'text' : 'password'}
             name="newPassword"
