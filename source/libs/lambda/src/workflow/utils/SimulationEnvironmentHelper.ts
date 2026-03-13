@@ -113,6 +113,7 @@ class SimulationEnvironmentHelper {
     simEnvVars.REWARD_FILE_S3_KEY = rewardFunctionS3Location.key;
     simEnvVars.SAGEMAKER_SHARED_S3_BUCKET = sageMakerArtifactsS3Location.bucket;
     simEnvVars.SAGEMAKER_SHARED_S3_PREFIX = sageMakerArtifactsS3Location.key;
+    simEnvVars.MIN_EVAL_TRIALS = 2;
     // simEnvVars.NUMBER_OF_EPISODES = 1; // from trainingConfig.getTerminationConditions().getMaxEpisodes(); possibly add later
     // simEnvVars.TARGET_REWARD_SCORE = 1; // from trainingConfig.getTerminationConditions().getRewardScore(); possibly add later
     // simEnvVars.TRAINING_JOB_ARN = trainingJobArn; // DeepRacer training job arn. TODO: Verify it isn't required

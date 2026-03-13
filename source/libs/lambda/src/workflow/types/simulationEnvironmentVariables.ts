@@ -128,4 +128,7 @@ export interface SimulationEnvironmentVariables {
 
   /** evaluation model selection - best or last */
   EVAL_CHECKPOINT: string;
+
+  /** Evaluation trails during training */
+  MIN_EVAL_TRIALS: number;
 }
