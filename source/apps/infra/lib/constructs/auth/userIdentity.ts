@@ -16,7 +16,6 @@ import {
   CfnIdentityPoolRoleAttachment,
   StringAttribute,
 } from 'aws-cdk-lib/aws-cognito';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { FederatedPrincipal, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -430,16 +429,6 @@ export class UserIdentity extends Construct {
     });
     new CfnOutput(this, 'IdentityPoolId', {
       value: this.identityPool.ref,
-    });
-
-    // SSM exports for SSO integration
-    new StringParameter(this, 'UserPoolIdSsmParam', {
-      parameterName: `/${namespace}/cognito/userPoolId`,
-      stringValue: this.userPool.userPoolId,
-    });
-    new StringParameter(this, 'UserPoolArnSsmParam', {
-      parameterName: `/${namespace}/cognito/userPoolArn`,
-      stringValue: this.userPool.userPoolArn,
     });
   }
 
