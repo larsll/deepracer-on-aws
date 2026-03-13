@@ -14,7 +14,9 @@ import {
   CfnUserPoolGroup,
   CfnIdentityPool,
   CfnIdentityPoolRoleAttachment,
+  StringAttribute,
 } from 'aws-cdk-lib/aws-cognito';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { FederatedPrincipal, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -126,11 +128,20 @@ export class UserIdentity extends Construct {
       alarmDescription: 'Alert when a PostSignUpFunction failure occurs',
     });
 
+    // Configure the pre-token-generation hook (injects DREM group aliases for SSO)
+    const preTokenGenerationFn = new NodeLambdaFunction(this, 'PreTokenGenerationFunction', {
+      entry: path.join(__dirname, '../../../../../libs/lambda/src/cognito/handlers/preTokenGeneration.ts'),
+      functionName: `${functionNamePrefix}-PreTokenGenerationFn`,
+      logGroupCategory: LogGroupCategory.USER_IDENTITY,
+      namespace: props.namespace,
+    });
+
     // Configure the user pool
     this.userPool = new UserPool(this, 'UserPool', {
       lambdaTriggers: {
         preSignUp: preSignUpFn,
         postConfirmation: postConfirmationFn,
+        preTokenGeneration: preTokenGenerationFn,
       },
       signInAliases: {
         email: true,
@@ -146,6 +157,9 @@ export class UserIdentity extends Construct {
         minLength: 8,
       },
       selfSignUpEnabled: deepRacerIndyAppConfig.userPool.enableSignups,
+      customAttributes: {
+        countryCode: new StringAttribute({ mutable: true }),
+      },
       userInvitation: {
         emailSubject: 'Welcome to DeepRacer on AWS',
         emailBody:
@@ -416,6 +430,16 @@ export class UserIdentity extends Construct {
     });
     new CfnOutput(this, 'IdentityPoolId', {
       value: this.identityPool.ref,
+    });
+
+    // SSM exports for SSO integration
+    new StringParameter(this, 'UserPoolIdSsmParam', {
+      parameterName: `/${namespace}/cognito/userPoolId`,
+      stringValue: this.userPool.userPoolId,
+    });
+    new StringParameter(this, 'UserPoolArnSsmParam', {
+      parameterName: `/${namespace}/cognito/userPoolArn`,
+      stringValue: this.userPool.userPoolArn,
     });
   }
 
