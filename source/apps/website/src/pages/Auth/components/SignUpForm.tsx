@@ -61,9 +61,7 @@ const SignUpForm = () => {
         options: {
           userAttributes: {
             email: data.emailAddress,
-          },
-          clientMetadata: {
-            racerAlias: data.racerAlias,
+            preferred_username: data.racerAlias,
           },
         },
       });

@@ -145,6 +145,7 @@ export class UserIdentity extends Construct {
       signInAliases: {
         email: true,
         username: true,
+        preferredUsername: true,
       },
       userPoolName: `${namespace}-${BASE_USER_POOL_NAME}`,
       signInCaseSensitive: false,
@@ -313,6 +314,18 @@ export class UserIdentity extends Construct {
       userPoolId: this.userPool.userPoolId,
       groupName: 'dr-racers',
       description: 'DeepRacer on AWS - Racer user group',
+    });
+
+    new CfnUserPoolGroup(this, 'CommentatorUserPoolGroup', {
+      userPoolId: this.userPool.userPoolId,
+      groupName: 'dr-commentator',
+      description: 'DeepRacer on AWS - Commentator user group',
+    });
+
+    new CfnUserPoolGroup(this, 'RegistrationUserPoolGroup', {
+      userPoolId: this.userPool.userPoolId,
+      groupName: 'dr-registration',
+      description: 'DeepRacer on AWS - Registration user group',
     });
 
     // Create a function that updates the role property on the profile in response to a user group change

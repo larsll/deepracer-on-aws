@@ -14,6 +14,8 @@ const GROUP_ALIAS_MAP: Record<string, string> = {
   'dr-admins': 'admin',
   'dr-race-facilitators': 'operator',
   'dr-racers': 'racer',
+  'dr-commentator': 'commentator',
+  'dr-registration': 'registration',
 };
 
 export const PreTokenGeneration: PreTokenGenerationTriggerHandler = async (event) => {
