@@ -94,6 +94,7 @@ const NewPasswordForm = () => {
         userAttributes: {
           'custom:countryCode': countryCode,
           preferred_username: data.racerAlias,
+          'custom:racerName': data.racerAlias,
         },
       });
 

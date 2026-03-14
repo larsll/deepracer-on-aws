@@ -159,6 +159,7 @@ export class UserIdentity extends Construct {
       selfSignUpEnabled: deepRacerIndyAppConfig.userPool.enableSignups,
       customAttributes: {
         countryCode: new StringAttribute({ mutable: true }),
+        racerName: new StringAttribute({ mutable: true }),
       },
       userInvitation: {
         emailSubject: 'Welcome to DeepRacer on AWS',
