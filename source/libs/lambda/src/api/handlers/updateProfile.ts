@@ -109,7 +109,10 @@ export const UpdateProfileOperation: Operation<
         new AdminUpdateUserAttributesCommand({
           UserPoolId: userPoolId,
           Username: targetProfileId,
-          UserAttributes: [{ Name: 'preferred_username', Value: attributes.alias }],
+          UserAttributes: [
+            { Name: 'preferred_username', Value: attributes.alias },
+            { Name: 'custom:racerName', Value: attributes.alias },
+          ],
         }),
       );
     }

@@ -62,6 +62,7 @@ const SignUpForm = () => {
           userAttributes: {
             email: data.emailAddress,
             preferred_username: data.racerAlias,
+            'custom:racerName': data.racerAlias,
           },
         },
       });
