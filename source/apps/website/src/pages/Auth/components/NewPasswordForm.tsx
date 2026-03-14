@@ -90,7 +90,12 @@ const NewPasswordForm = () => {
         challengeResponse: data.newPassword,
       });
 
-      await updateUserAttributes({ userAttributes: { 'custom:countryCode': countryCode } });
+      await updateUserAttributes({
+        userAttributes: {
+          'custom:countryCode': countryCode,
+          preferred_username: data.racerAlias,
+        },
+      });
 
       // Update the user's profile with their chosen racer alias
       await updateProfile({

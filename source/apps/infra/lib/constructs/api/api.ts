@@ -136,7 +136,7 @@ export class Api extends Construct {
 
     functions.UpdateProfile.addToRolePolicy(
       new PolicyStatement({
-        actions: ['cognito-idp:AdminListGroupsForUser'],
+        actions: ['cognito-idp:AdminListGroupsForUser', 'cognito-idp:AdminUpdateUserAttributes'],
         resources: [
           Stack.of(this).formatArn({
             service: 'cognito-idp',
