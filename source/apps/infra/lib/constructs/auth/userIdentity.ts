@@ -14,6 +14,7 @@ import {
   CfnUserPoolGroup,
   CfnIdentityPool,
   CfnIdentityPoolRoleAttachment,
+  StringAttribute,
 } from 'aws-cdk-lib/aws-cognito';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
@@ -126,15 +127,25 @@ export class UserIdentity extends Construct {
       alarmDescription: 'Alert when a PostSignUpFunction failure occurs',
     });
 
+    // Configure the pre-token-generation hook (injects DREM group aliases for SSO)
+    const preTokenGenerationFn = new NodeLambdaFunction(this, 'PreTokenGenerationFunction', {
+      entry: path.join(__dirname, '../../../../../libs/lambda/src/cognito/handlers/preTokenGeneration.ts'),
+      functionName: `${functionNamePrefix}-PreTokenGenerationFn`,
+      logGroupCategory: LogGroupCategory.USER_IDENTITY,
+      namespace: props.namespace,
+    });
+
     // Configure the user pool
     this.userPool = new UserPool(this, 'UserPool', {
       lambdaTriggers: {
         preSignUp: preSignUpFn,
         postConfirmation: postConfirmationFn,
+        preTokenGeneration: preTokenGenerationFn,
       },
       signInAliases: {
         email: true,
         username: true,
+        preferredUsername: true,
       },
       userPoolName: `${namespace}-${BASE_USER_POOL_NAME}`,
       signInCaseSensitive: false,
@@ -146,6 +157,10 @@ export class UserIdentity extends Construct {
         minLength: 8,
       },
       selfSignUpEnabled: deepRacerIndyAppConfig.userPool.enableSignups,
+      customAttributes: {
+        countryCode: new StringAttribute({ mutable: true }),
+        racerName: new StringAttribute({ mutable: true }),
+      },
       userInvitation: {
         emailSubject: 'Welcome to DeepRacer on AWS',
         emailBody:
@@ -300,6 +315,18 @@ export class UserIdentity extends Construct {
       userPoolId: this.userPool.userPoolId,
       groupName: 'dr-racers',
       description: 'DeepRacer on AWS - Racer user group',
+    });
+
+    new CfnUserPoolGroup(this, 'CommentatorUserPoolGroup', {
+      userPoolId: this.userPool.userPoolId,
+      groupName: 'dr-commentator',
+      description: 'DeepRacer on AWS - Commentator user group',
+    });
+
+    new CfnUserPoolGroup(this, 'RegistrationUserPoolGroup', {
+      userPoolId: this.userPool.userPoolId,
+      groupName: 'dr-registration',
+      description: 'DeepRacer on AWS - Registration user group',
     });
 
     // Create a function that updates the role property on the profile in response to a user group change
