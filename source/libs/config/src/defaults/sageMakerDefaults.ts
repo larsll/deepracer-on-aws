@@ -5,6 +5,6 @@ import type { DeepRacerIndySageMakerConfig } from '#types/sageMakerConfig.js';
 
 export const sageMakerDefaults: DeepRacerIndySageMakerConfig = {
   instanceCount: 1,
-  instanceType: 'ml.c6i.4xlarge',
+  instanceType: 'ml.c7i.4xlarge',
   instanceVolumeSizeInGB: 20,
 };
