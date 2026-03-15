@@ -131,4 +131,7 @@ export interface SimulationEnvironmentVariables {
 
   /** Evaluation trails during training */
   MIN_EVAL_TRIALS: number;
+
+  /** Top Camera */
+  CAMERA_SUB_ENABLE: string;
 }
