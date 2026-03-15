@@ -37,7 +37,6 @@ class SimulationEnvironmentHelper {
     const jobType = jobNameHelper.getJobType(jobName);
     const metricsS3Location = new AmazonS3URI(jobAssetS3Locations.metricsS3Location);
     const simTraceS3Location = new AmazonS3URI(jobAssetS3Locations.simTraceS3Location);
-    const videosS3Location = new AmazonS3URI(jobAssetS3Locations.videosS3Location);
 
     const simEnvVars: Partial<SimulationEnvironmentVariables> = {
       AWS_REGION: process.env.REGION,
@@ -45,8 +44,6 @@ class SimulationEnvironmentHelper {
       JOB_TYPE: jobType.toUpperCase(),
       METRICS_S3_BUCKET: metricsS3Location.bucket,
       METRICS_S3_OBJECT_KEY: metricsS3Location.key,
-      MP4_S3_BUCKET: videosS3Location.bucket,
-      MP4_S3_OBJECT_PREFIX: videosS3Location.key,
       SIMTRACE_S3_BUCKET: simTraceS3Location.bucket,
       SIMTRACE_S3_PREFIX: simTraceS3Location.key,
       KINESIS_VIDEO_STREAM_NAME: jobName,
@@ -58,6 +55,7 @@ class SimulationEnvironmentHelper {
         ? undefined
         : trackConfig.trackDirection === TrackDirection.CLOCKWISE,
       RACE_TYPE: jobItem.raceType,
+      CAMERA_SUB_ENABLE: 'False',
 
       // Leaderboard evaluation variables
       // LEADERBOARD_TYPE: '', // TODO: Figure out what this does and if we need it
@@ -91,10 +89,14 @@ class SimulationEnvironmentHelper {
     const { assetS3Locations: modelAssetS3Locations } = modelItem;
 
     const sageMakerArtifactsS3Location = new AmazonS3URI(modelAssetS3Locations.sageMakerArtifactsS3Location);
+    const videosS3Location = new AmazonS3URI(jobItem.assetS3Locations.videosS3Location);
 
+    simEnvVars.MP4_S3_BUCKET = videosS3Location.bucket;
+    simEnvVars.MP4_S3_OBJECT_PREFIX = videosS3Location.key;
     simEnvVars.MODEL_S3_BUCKET = sageMakerArtifactsS3Location.bucket;
     simEnvVars.MODEL_S3_PREFIX = sageMakerArtifactsS3Location.key;
     simEnvVars.NUMBER_OF_TRIALS = terminationConditions.maxLaps;
+    simEnvVars.EVAL_CHECKPOINT = 'last';
   }
 
   private addTrainingSpecificVariables(simEnvVars: Partial<SimulationEnvironmentVariables>, modelItem: ModelItem) {
@@ -112,6 +114,7 @@ class SimulationEnvironmentHelper {
     simEnvVars.REWARD_FILE_S3_KEY = rewardFunctionS3Location.key;
     simEnvVars.SAGEMAKER_SHARED_S3_BUCKET = sageMakerArtifactsS3Location.bucket;
     simEnvVars.SAGEMAKER_SHARED_S3_PREFIX = sageMakerArtifactsS3Location.key;
+    simEnvVars.MIN_EVAL_TRIALS = 2;
     // simEnvVars.NUMBER_OF_EPISODES = 1; // from trainingConfig.getTerminationConditions().getMaxEpisodes(); possibly add later
     // simEnvVars.TARGET_REWARD_SCORE = 1; // from trainingConfig.getTerminationConditions().getRewardScore(); possibly add later
     // simEnvVars.TRAINING_JOB_ARN = trainingJobArn; // DeepRacer training job arn. TODO: Verify it isn't required

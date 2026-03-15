@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { AdminUpdateUserAttributesCommand } from '@aws-sdk/client-cognito-identity-provider';
 import type { Operation } from '@aws-smithy/server-common';
 import { profileDao, ResourceId } from '@deepracer-indy/database';
 import {
@@ -11,6 +12,7 @@ import {
   UpdateProfileServerOutput,
 } from '@deepracer-indy/typescript-server-client';
 
+import { cognitoClient } from '../../utils/clients/cognitoClient.js';
 import type { HandlerContext } from '../types/apiGatewayHandlerContext.js';
 import { getApiGatewayHandler, isUserAdmin } from '../utils/apiGateway.js';
 import { instrumentOperation } from '../utils/instrumentation/instrumentOperation.js';
@@ -98,6 +100,23 @@ export const UpdateProfileOperation: Operation<
 
   // Update the profile
   const profileItem = await profileDao.update({ profileId: targetProfileId }, attributes);
+
+  // Sync preferred_username in Cognito when alias changes
+  if (attributes.alias) {
+    const userPoolId = process.env.USER_POOL_ID;
+    if (userPoolId) {
+      await cognitoClient.send(
+        new AdminUpdateUserAttributesCommand({
+          UserPoolId: userPoolId,
+          Username: targetProfileId,
+          UserAttributes: [
+            { Name: 'preferred_username', Value: attributes.alias },
+            { Name: 'custom:racerName', Value: attributes.alias },
+          ],
+        }),
+      );
+    }
+  }
 
   return {
     profile: {
