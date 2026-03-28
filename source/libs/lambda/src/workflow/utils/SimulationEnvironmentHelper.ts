@@ -58,6 +58,7 @@ class SimulationEnvironmentHelper {
         ? undefined
         : trackConfig.trackDirection === TrackDirection.CLOCKWISE,
       RACE_TYPE: jobItem.raceType,
+      CAMERA_SUB_ENABLE: 'False',
 
       // Leaderboard evaluation variables
       // LEADERBOARD_TYPE: '', // TODO: Figure out what this does and if we need it

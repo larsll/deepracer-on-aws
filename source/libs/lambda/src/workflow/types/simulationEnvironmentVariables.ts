@@ -125,4 +125,7 @@ export interface SimulationEnvironmentVariables {
   OBJECT_POSITIONS: string[];
   /** isObstacleBotCar */
   IS_OBSTACLE_BOT_CAR: boolean;
+
+  /** Top Camera */
+  CAMERA_SUB_ENABLE: string;
 }
