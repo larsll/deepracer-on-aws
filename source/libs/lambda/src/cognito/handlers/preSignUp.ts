@@ -31,8 +31,8 @@ export const PreSignUp: PreSignUpTriggerHandler = async (event) => {
 
   const { newUserComputeMinutesLimit, newUserModelCountLimit } = newUserLimits;
 
-  // Get racer alias from client metadata, fallback to default if not provided
-  const racerAlias = request.clientMetadata?.racerAlias || 'RacerAlias';
+  // Get racer alias from user attributes (prefer custom:racerName for case-preserving, fall back to preferred_username)
+  const racerAlias = request.userAttributes?.['custom:racerName'] || request.userAttributes?.preferred_username || 'RacerAlias';
 
   // Validate alias format
   if (!isValidAlias(racerAlias)) {

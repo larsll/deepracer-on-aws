@@ -61,6 +61,14 @@ async function CreateUser(userPoolId: string, username: string, emailAddress: st
             Name: 'email_verified',
             Value: 'true',
           },
+          {
+            Name: 'preferred_username',
+            Value: username,
+          },
+          {
+            Name: 'custom:racerName',
+            Value: username,
+          },
         ],
       }),
     );
