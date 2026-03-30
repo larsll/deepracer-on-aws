@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.11] - 2026-03-23
+
+### Security
+
+- Update dependencies to mitigate [GHSA-rf6f-7fwh-wjgh](https://github.com/advisories/GHSA-rf6f-7fwh-wjgh) and [CVE-2026-33036](https://nvd.nist.gov/vuln/detail/CVE-2026-33036).
+
+## [1.0.10] - 2026-03-18
+
+### Security
+
+- Update dependencies to mitigate [CVE-2026-3805](https://nvd.nist.gov/vuln/detail/CVE-2026-3805), [CVE-2026-32141](https://nvd.nist.gov/vuln/detail/CVE-2026-32141)
+
+### Fixed
+
+- Virtual Model file is ZIP, not tar.gz ([#31](https://github.com/aws-solutions/deepracer-on-aws/issues/31))
+- Multiple deployments in the same region would fail due to Cloudwatch Alarm name collision
+
 ## [1.0.9] - 2026-03-09
 
 ### Security
@@ -73,7 +90,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Hardcoded Pacific timezone on race creation page to be dynamic (#6 - Issue 1)
-
 
 ## [1.0.0] - 2026-01-26
 
