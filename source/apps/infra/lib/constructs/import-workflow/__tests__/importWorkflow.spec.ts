@@ -12,10 +12,17 @@ import { Construct } from 'constructs';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { EcrStack } from '../../../stacks/ecrStack.js';
 import { Api } from '../../api/api.js';
 import { ImageRepositoryMapping } from '../../ecr-image-downloader/index.js';
 import { GlobalSettings } from '../../storage/appConfig.js';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 // Mock EcrStack for testing
 class MockEcrStack extends Construct {

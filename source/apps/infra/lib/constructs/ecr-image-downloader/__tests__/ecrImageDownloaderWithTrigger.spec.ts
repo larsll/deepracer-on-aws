@@ -7,7 +7,11 @@ import { ComputeType } from 'aws-cdk-lib/aws-codebuild';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { EcrImageDownloaderWithTrigger, ImageRepositoryMapping } from '../ecrImageDownloaderWithTrigger.js';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
 
 // Mock the KmsHelper to avoid having the single key shared between stacks
 vi.mock('../../common/kmsHelper.js', () => {
@@ -25,21 +29,7 @@ vi.mock('../../common/kmsHelper.js', () => {
 });
 
 // Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
-vi.mock('#constructs/common/logGroupsHelper.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('#constructs/common/logGroupsHelper.js')>();
-  return {
-    ...actual,
-    LogGroupsHelper: {
-      ...actual.LogGroupsHelper,
-      getOrCreateLogGroup: vi.fn().mockImplementation((scope, id, props) => {
-        return {
-          logGroupName: `mocked-log-group-${id}`,
-          logGroupArn: `arn:aws:logs:us-east-1:123456789012:log-group:mocked-log-group-${id}`,
-        };
-      }),
-    },
-  };
-});
+vi.mock('#constructs/common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 describe('EcrImageDownloaderWithTrigger', () => {
   let stack: Stack;

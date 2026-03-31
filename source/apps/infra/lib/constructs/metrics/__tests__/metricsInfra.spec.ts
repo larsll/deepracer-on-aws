@@ -7,27 +7,16 @@ import { AttributeType, TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { LogGroupsHelper } from '../../common/logGroupsHelper.js';
 import { functionNamePrefix } from '../../common/nodeLambdaFunction.js';
 import { MetricsInfra } from '../metricsInfra.js';
 
 // Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
-vi.mock('#constructs/common/logGroupsHelper.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('#constructs/common/logGroupsHelper.js')>();
-  return {
-    ...actual,
-    LogGroupsHelper: {
-      ...actual.LogGroupsHelper,
-      getAllLogGroups: () => [],
-      getOrCreateLogGroup: vi.fn().mockImplementation((scope, id, props) => {
-        return {
-          logGroupName: `mocked-log-group-${id}`,
-          logGroupArn: `arn:aws:logs:us-east-1:123456789012:log-group:mocked-log-group-${id}`,
-        };
-      }),
-    },
-  };
-});
+vi.mock('#constructs/common/logGroupsHelper.js', () => createLogGroupsHelperMock());
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
 
 describe('MetricsInfra', () => {
   let template: Template;

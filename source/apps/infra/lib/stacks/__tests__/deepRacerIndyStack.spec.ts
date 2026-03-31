@@ -9,6 +9,20 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { DeepRacerIndyStack } from '../deepRacerIndyStack.js';
 import { SolutionStackProps } from '../solutionStackProps.js';
 
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+// Note: uses dynamic import because the static import of createNodeLambdaFunctionMock
+// triggers transitive module loading that conflicts with vi.mock hoisting at the stack level.
+vi.mock('../../constructs/common/nodeLambdaFunction.js', async () => {
+  const { createNodeLambdaFunctionMock } = await import('../../constants/testMocks.js');
+  return createNodeLambdaFunctionMock();
+});
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../constructs/common/logGroupsHelper.js', async () => {
+  const { createLogGroupsHelperMock } = await import('../../constants/testMocks.js');
+  return createLogGroupsHelperMock();
+});
+
 describe('DeepRacerIndyStack', () => {
   let originalAsset: typeof Source.asset;
   let app: App;

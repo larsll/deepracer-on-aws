@@ -6,7 +6,25 @@ import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../constants/testMocks.js';
 import { EcrStack, EcrImageConfig } from '../ecrStack.js';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../constructs/common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the KmsHelper to avoid having the single key shared between stacks
+vi.mock('../../constructs/common/kmsHelper.js', () => ({
+  KmsHelper: {
+    get: vi.fn(() => ({
+      grantEncryptDecrypt: vi.fn(),
+      keyId: 'mock-key-id',
+      keyArn: 'arn:aws:kms:us-east-1:123456789012:key/mock-key-id',
+    })),
+  },
+}));
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../constructs/common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 function findRepositoryById(ecrStack: EcrStack, repositoryId: string): Repository | undefined {
   const mapping = ecrStack.imageRepositoryMappings.find((repoMapping) => repoMapping.repositoryId === repositoryId);
