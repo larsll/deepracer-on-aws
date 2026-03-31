@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
-import path from 'node:path';
 
 import { App, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
@@ -10,20 +9,27 @@ import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { AttributeType, TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Code, Function as LambdaFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { EcrStack } from '../../../stacks/ecrStack.js';
 import { ImageRepositoryMapping } from '../../ecr-image-downloader/index.js';
 import { GlobalSettings } from '../../storage/appConfig.js';
 import { Api } from '../api.js';
 
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../common/logGroupsHelper.js', () => createLogGroupsHelperMock());
+
 // Interface for testing private methods
 interface ApiTestInterface {
-  getOpenApiDef: (functions: Record<string, NodejsFunction>, userPool: UserPool) => void;
+  getOpenApiDef: (functions: Record<string, LambdaFunction>, userPool: UserPool) => void;
 }
 
 // Mock EcrStack for testing
@@ -255,8 +261,10 @@ describe('Api', () => {
       expect(() => {
         (testApi as unknown as ApiTestInterface).getOpenApiDef(
           {
-            GetModel: new NodejsFunction(testStack, 'TestFunction', {
-              entry: path.join(__dirname, '../api.ts'),
+            GetModel: new LambdaFunction(testStack, 'TestFunction', {
+              handler: 'index.handler',
+              runtime: Runtime.NODEJS_22_X,
+              code: Code.fromInline('exports.handler = async () => {}'),
             }),
           },
           testUserPool,
