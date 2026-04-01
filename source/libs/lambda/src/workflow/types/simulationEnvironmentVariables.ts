@@ -125,4 +125,7 @@ export interface SimulationEnvironmentVariables {
   OBJECT_POSITIONS: string[];
   /** isObstacleBotCar */
   IS_OBSTACLE_BOT_CAR: boolean;
+
+  /** Evaluation trails during training */
+  MIN_EVAL_TRIALS: number;
 }
