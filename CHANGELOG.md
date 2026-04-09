@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.13] - 2026-04-03
+
+### Security
+
+- Update dependencies to mitigate [GHSA-c2c7-rcm5-vvqj](https://github.com/advisories/GHSA-c2c7-rcm5-vvqj), [GHSA-3v7f-55p6-f55p](https://github.com/advisories/GHSA-3v7f-55p6-f55p), and [CVE-2026-4800](https://nvd.nist.gov/vuln/detail/CVE-2026-4800).
+
+## [1.0.12] - 2026-03-31
+
+### Security
+
+- Update dependencies to mitigate [CVE-2026-4926](https://nvd.nist.gov/vuln/detail/CVE-2026-4926), [CVE-2024-7347](https://nvd.nist.gov/vuln/detail/CVE-2024-7347), 
+[CVE-2025-23419](https://nvd.nist.gov/vuln/detail/CVE-2025-23419), [CVE-2025-53859](https://nvd.nist.gov/vuln/detail/CVE-2025-53859), [CVE-2026-1642](https://nvd.nist.gov/vuln/detail/CVE-2026-1642), [CVE-2026-27651](https://nvd.nist.gov/vuln/detail/CVE-2026-27651), [CVE-2026-27654](https://nvd.nist.gov/vuln/detail/CVE-2026-27654), [CVE-2026-27784](https://nvd.nist.gov/vuln/detail/CVE-2026-27784), [CVE-2026-28753](https://nvd.nist.gov/vuln/detail/CVE-2026-28753), and [CVE-2026-32647](https://nvd.nist.gov/vuln/detail/CVE-2026-32647).
+
 ## [1.0.11] - 2026-03-23
 
 ### Security
