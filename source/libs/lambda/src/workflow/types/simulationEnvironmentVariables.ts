@@ -131,4 +131,6 @@ export interface SimulationEnvironmentVariables {
 
   /** evaluation model selection - best or last */
   EVAL_CHECKPOINT: string;
+  /** Top Camera */
+  CAMERA_SUB_ENABLE: string;
 }
