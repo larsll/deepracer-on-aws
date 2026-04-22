@@ -8,7 +8,14 @@ import { Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../constants/testMocks.js';
 import { WebsiteStack, WebsiteStackProps } from '../websiteStack.js';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../constructs/common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../constructs/common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 describe('WebsiteStack', () => {
   let originalAsset: typeof Source.asset;

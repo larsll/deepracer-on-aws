@@ -7,8 +7,15 @@ import { AttributeType, TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { functionNamePrefix } from '../../common/nodeLambdaFunction.js';
 import { MonthlyQuotaReset } from '../monthlyQuotaReset';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 describe('MonthlyQuotaReset', () => {
   let template: Template;

@@ -6,8 +6,15 @@ import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 
 import { TEST_NAMESPACE } from '../../../constants/testConstants.js';
+import { createNodeLambdaFunctionMock, createLogGroupsHelperMock } from '../../../constants/testMocks.js';
 import { functionNamePrefix } from '../../common/nodeLambdaFunction.js';
 import { ApiCorsUpdate } from '../ApiCorsUpdate.js';
+
+// Mock NodeLambdaFunction to use inline code instead of esbuild bundling.
+vi.mock('../../common/nodeLambdaFunction.js', () => createNodeLambdaFunctionMock());
+
+// Mock the LogGroupsHelper to avoid having the static log groups shared between stacks
+vi.mock('../../common/logGroupsHelper.js', () => createLogGroupsHelperMock());
 
 describe('ApiCorsUpdate', () => {
   const app = new App();

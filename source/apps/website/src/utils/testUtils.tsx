@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable import/export */
 
 import {
   renderHook as rtlRenderHook,
@@ -98,5 +97,5 @@ const render = (
 
 export const mockDeepRacerClient = mockClient(deepRacerClient);
 
-export * from '@testing-library/react';
+export { fireEvent, screen, waitFor, waitForElementToBeRemoved, within, act, cleanup } from '@testing-library/react';
 export { render, renderHook };
