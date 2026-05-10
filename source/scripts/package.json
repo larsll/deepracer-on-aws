@@ -1,0 +1,9 @@
+{
+  "name": "@deepracer-indy/scripts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.654.0"
+  }
+}
