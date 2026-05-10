@@ -723,6 +723,12 @@ importers:
         specifier: 3.654.0
         version: 3.654.0
 
+  scripts:
+    dependencies:
+      '@aws-sdk/client-cognito-identity-provider':
+        specifier: 3.654.0
+        version: 3.654.0
+
 packages:
 
   '@adobe/css-tools@4.4.4':
