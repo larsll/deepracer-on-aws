@@ -20,6 +20,15 @@
  *   --group <name>        Cognito group to add users to (default: dr-racers)
  *   --region <region>     AWS region (default: AWS_DEFAULT_REGION or AWS_REGION env var)
  *   --dry-run             Validate input and print plan without creating anything
+ *   --pdf <file>          Write a PDF of credential cards to this path after processing
+ *   --console-url <url>   Console URL printed on each credential card (required with --pdf)
+ *   --event-url <url>     Event URL printed on each credential card (required with --pdf)
+ *   --pdf-title <text>    Title shown in the card header (default: "DeepRacer Grand Prix")
+ *   --paper <size>        Paper size: a4 (default) or letter
+ *   --font-body <font>    Body font name or font file path (default: Helvetica)
+ *   --font-body-bold <f>  Bold body font name or font file path (default: Helvetica-Bold)
+ *   --font-mono <font>    Mono font name or font file path (default: Courier)
+ *   --font-mono-bold <f>  Bold mono font name or font file path (default: Courier-Bold)
  *
  * CSV format (first row must be the header):
  *   username,password
@@ -36,8 +45,9 @@
  *   - Uppercase letter, lowercase letter, digit, and symbol
  */
 
-import { readFileSync } from 'fs';
+import { createWriteStream, existsSync, readFileSync } from 'fs';
 
+import PDFDocument from 'pdfkit';
 import {
   AdminAddUserToGroupCommand,
   AdminCreateUserCommand,
@@ -73,6 +83,13 @@ interface UserResult {
   username: string;
   status: 'created' | 'failed' | 'dry-run';
   error?: string;
+}
+
+interface PdfFontConfig {
+  body: string;
+  bodyBold: string;
+  mono: string;
+  monoBold: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +175,131 @@ async function discoverUserPoolId(client: CognitoIdentityProviderClient, namespa
 }
 
 // ---------------------------------------------------------------------------
+// PDF generation
+// ---------------------------------------------------------------------------
+
+function resolvePdfFont(doc: PDFKit.PDFDocument, alias: string, fontSpec: string): string {
+  // If it looks like a file path, register it. Otherwise use it as a built-in PDF font name.
+  if (/[\\/]/.test(fontSpec) || /\.(ttf|otf|ttc)$/i.test(fontSpec)) {
+    if (!existsSync(fontSpec)) {
+      throw new Error(`Font file not found: ${fontSpec}`);
+    }
+    doc.registerFont(alias, fontSpec);
+    return alias;
+  }
+
+  return fontSpec;
+}
+
+function generateCredentialsPdf(
+  rows: UserRow[],
+  outputPath: string,
+  consoleUrl: string,
+  eventUrl: string,
+  title: string,
+  paper: 'a4' | 'letter',
+  fonts: PdfFontConfig,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // A4: 595.28 × 841.89 pt   Letter: 612 × 792 pt
+    const pageW = paper === 'letter' ? 612   : 595.28;
+    const pageH = paper === 'letter' ? 792   : 841.89;
+    const pdfSize = paper === 'letter' ? 'LETTER' : 'A4';
+
+    const doc = new PDFDocument({ size: pdfSize, margin: 36, autoFirstPage: false });
+    const bodyFont = resolvePdfFont(doc, 'Body', fonts.body);
+    const bodyBoldFont = resolvePdfFont(doc, 'BodyBold', fonts.bodyBold);
+    const monoFont = resolvePdfFont(doc, 'Mono', fonts.mono);
+    const monoBoldFont = resolvePdfFont(doc, 'MonoBold', fonts.monoBold);
+
+    const stream = createWriteStream(outputPath);
+    doc.pipe(stream);
+    stream.on('error', reject);
+    stream.on('finish', resolve);
+
+    // Layout: 1 column × 2 rows = 2 cards per page (large, easy-to-read).
+    const margin = 36;
+    const gapY   = 18;
+    const cardW  = pageW - margin * 2;
+    const cardH  = (pageH - margin * 2 - gapY) / 2;
+    const hdrH   = 40;
+    const pad    = 16;
+    // DeepRacer-aligned palette from existing website assets/constants.
+    const accent = '#16191F';
+    const mid    = '#935DD1';
+    const muted  = '#779EFF';
+    const bg     = '#F5F7FF';
+    const border = '#C9D6FF';
+    const ink    = '#0d1f30';
+
+    // Typography: keep a small, consistent scale for better readability.
+    const titleSize = 16;
+    const labelSize = 10;
+    const valueSize = 18;
+    const urlSize = 12;
+
+    // Vertical rhythm.
+    const gapLabelToValue = 15;
+    const gapSection = 28;
+    const gapAfterDivider = 12;
+    const lineH = 0.6;
+
+    rows.forEach((row, idx) => {
+      const posOnPage = idx % 2;
+      if (posOnPage === 0) doc.addPage();
+
+      const x = margin;
+      const y = margin + posOnPage * (cardH + gapY);
+
+      // Card background
+      doc.roundedRect(x, y, cardW, cardH, 6).fillAndStroke(bg, border);
+
+      // Header bar
+      doc.roundedRect(x, y, cardW, hdrH, 6).fill(accent);
+      doc.rect(x, y + hdrH - 6, cardW, 6).fill(accent);
+      doc.rect(x, y + hdrH - 4, cardW, 4).fill(mid);
+
+      doc.fillColor('#ffffff').font(bodyBoldFont).fontSize(titleSize)
+        .text(title, x + pad, y + 10, { width: cardW - pad * 2 });
+
+      // Body
+      let cy = y + hdrH + pad;
+
+      // USERNAME
+      doc.fillColor(muted).font(bodyBoldFont).fontSize(labelSize).text('USERNAME', x + pad, cy);
+      cy += gapLabelToValue;
+      doc.fillColor(ink).font(monoBoldFont).fontSize(valueSize).text(row.username, x + pad, cy);
+      cy += gapSection;
+
+      // PASSWORD
+      doc.fillColor(muted).font(bodyBoldFont).fontSize(labelSize).text('PASSWORD', x + pad, cy);
+      cy += gapLabelToValue;
+      doc.fillColor(ink).font(monoBoldFont).fontSize(valueSize).text(row.password, x + pad, cy);
+      cy += gapSection;
+
+      // Divider
+      cy += 2;
+      doc.moveTo(x + pad, cy).lineTo(x + cardW - pad, cy)
+        .strokeColor(border).lineWidth(lineH).stroke();
+      cy += gapAfterDivider;
+
+      // CONSOLE URL
+      doc.fillColor(muted).font(bodyBoldFont).fontSize(labelSize).text('CONSOLE', x + pad, cy);
+      cy += gapLabelToValue;
+      doc.fillColor(mid).font(bodyFont).fontSize(urlSize).text(consoleUrl, x + pad, cy, { link: consoleUrl });
+      cy += gapSection;
+
+      // EVENT URL
+      doc.fillColor(muted).font(bodyBoldFont).fontSize(labelSize).text('EVENT', x + pad, cy);
+      cy += gapLabelToValue;
+      doc.fillColor(mid).font(bodyFont).fontSize(urlSize).text(eventUrl, x + pad, cy, { link: eventUrl });
+    });
+
+    doc.end();
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Core user creation
 // ---------------------------------------------------------------------------
 
@@ -215,6 +357,18 @@ async function main() {
   const group = (args.group as string | undefined) ?? DEFAULT_GROUP;
   const region = (args.region as string | undefined) ?? process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION;
   const isDryRun = args['dry-run'] === true;
+  const pdfPath    = args.pdf as string | undefined;
+  const consoleUrl = args['console-url'] as string | undefined;
+  const eventUrl   = args['event-url'] as string | undefined;
+  const pdfTitle   = (args['pdf-title'] as string | undefined) ?? 'DeepRacer Grand Prix';
+  const paperRaw   = ((args.paper as string | undefined) ?? 'a4').toLowerCase();
+  const paper      = (paperRaw === 'letter' ? 'letter' : 'a4') as 'a4' | 'letter';
+  const fonts: PdfFontConfig = {
+    body: (args['font-body'] as string | undefined) ?? process.env.PDF_FONT_BODY ?? 'Helvetica',
+    bodyBold: (args['font-body-bold'] as string | undefined) ?? process.env.PDF_FONT_BODY_BOLD ?? 'Helvetica-Bold',
+    mono: (args['font-mono'] as string | undefined) ?? process.env.PDF_FONT_MONO ?? 'Courier',
+    monoBold: (args['font-mono-bold'] as string | undefined) ?? process.env.PDF_FONT_MONO_BOLD ?? 'Courier-Bold',
+  };
 
   // ── Validate required args ────────────────────────────────────────────────
 
@@ -225,6 +379,16 @@ async function main() {
 
   if (!userPoolIdArg && !namespace) {
     console.error('Error: provide either --user-pool-id <id> or --namespace <ns>.');
+    process.exit(1);
+  }
+
+  if (pdfPath && !consoleUrl) {
+    console.error('Error: --console-url <url> is required when --pdf is used.');
+    process.exit(1);
+  }
+
+  if (pdfPath && !eventUrl) {
+    console.error('Error: --event-url <url> is required when --pdf is used.');
     process.exit(1);
   }
 
@@ -331,6 +495,20 @@ async function main() {
       for (const r of failed) {
         console.log(`  ${r.username}: ${r.error}`);
       }
+      process.exit(1);
+    }
+  }
+
+  // ── Generate PDF ─────────────────────────────────────────────────────────
+
+  if (pdfPath) {
+    process.stdout.write(`\nGenerating credentials PDF → ${pdfPath}… `);
+    try {
+      await generateCredentialsPdf(rows, pdfPath, consoleUrl!, eventUrl!, pdfTitle, paper, fonts);
+      process.stdout.write('OK\n');
+    } catch (e) {
+      process.stdout.write('FAILED\n');
+      console.error(`PDF error: ${(e as Error).message}`);
       process.exit(1);
     }
   }
