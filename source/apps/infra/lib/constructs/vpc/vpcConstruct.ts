@@ -16,6 +16,7 @@ export class VpcConstruct extends Construct {
 
     this.userExecutionVpc = new Vpc(this, 'userExecutionVpc', {
       natGateways: 0,
+      restrictDefaultSecurityGroup: true,
       subnetConfiguration: [
         {
           cidrMask: 24,
