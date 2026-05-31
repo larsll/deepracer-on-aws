@@ -227,7 +227,8 @@ export class DeepRacerIndyStack extends Stack {
     });
 
     // Update email template with website URL after website is deployed
-    userIdentity.updateEmailTemplateWithWebsiteUrl(`https://${website.cloudFrontDomainName}`);
+    // Use the same URL as the CORS allowed origin: custom domain if configured, otherwise CloudFront URL
+    userIdentity.updateEmailTemplateWithWebsiteUrl(Token.asString(allowedOrigin));
 
     new UsageFunctions(this, 'UsageFunctions', {
       dynamoDBTable,
