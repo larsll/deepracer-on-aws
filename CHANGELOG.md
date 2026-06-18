@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-17
+
+### Added
+
+- A Live Racing feature to host and moderate real-time races with a dedicated race page, broadcast mode, facilitator and queue-management controls, participant notifications, a winner overlay, and submission queueing with evaluation.
+- A Model Management feature that allows admins/race facilitators to search and download physical car models by username.
+- A current version and update available indicators to Admin WebConsole.
+
+### Changed
+
+- Improved evaluation job video performance by isolating overlay editing into a dedicated ROS node.
+- Reduced eval/submission job shutdown time by 80 percent.
+- Amazon SES domain identity support for authentication emails ([#48](https://github.com/aws-solutions/deepracer-on-aws/issues/48)).
+- Improved lap management for races ([#38](https://github.com/aws-solutions/deepracer-on-aws/pull/38)) - contributed by ([@larsll](https://github.com/larsll)).
+
+### Fixed
+
+- Off-track time penalty not being applied to participant times in community races.
+- Admin unable to view all the profiles due to API skipping pagination token.
+- Model quota count resetting to total models trained instead of count of trained models during current month.
+- Updated continuous action space minimum speed UI validation to match API validation value (0.5).
+- Cognito invite email now uses custom domain when configured ([#58](https://github.com/aws-solutions/deepracer-on-aws/issues/58)) - contributed by ([@larsll](https://github.com/larsll)) via ([#59](https://github.com/aws-solutions/deepracer-on-aws/pull/59)).
+
+### Security
+
+- Restrict the default security group on the user execution VPC per Security Hub guidance ([#52](https://github.com/aws-solutions/deepracer-on-aws/pull/52)) - contributed by ([@larsll](https://github.com/larsll)).
+
 ## [1.1.7] - 2026-06-15
 
 ### Security
