@@ -86,6 +86,14 @@ const createUser = async (
           Name: 'email_verified',
           Value: 'true',
         },
+        {
+          Name: 'preferred_username',
+          Value: username,
+        },
+        {
+          Name: 'custom:racerName',
+          Value: username,
+        },
       ],
     }),
   );
