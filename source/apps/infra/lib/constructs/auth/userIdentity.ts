@@ -325,7 +325,7 @@ export class UserIdentity extends Construct {
     );
 
     this.userPoolClient = this.userPool.addClient('WebClient', {
-      refreshTokenValidity: Duration.days(1),
+      refreshTokenValidity: Duration.hours(12),
       authFlows: {
         userPassword: true,
         userSrp: true,

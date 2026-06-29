@@ -77,7 +77,7 @@ describe('UserIdentity', () => {
 
     expect(() =>
       template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
-        RefreshTokenValidity: Duration.days(1).toMinutes(),
+        RefreshTokenValidity: Duration.hours(12).toMinutes(),
         ExplicitAuthFlows: ['ALLOW_USER_PASSWORD_AUTH', 'ALLOW_USER_SRP_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH'],
       }),
     ).not.toThrow();
