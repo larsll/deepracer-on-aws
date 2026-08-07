@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-08-04
+
+### Security
+
+- Update dependencies to mitigate [CVE-2026-14257](https://github.com/advisories/GHSA-mh99-v99m-4gvg) and [GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895).
+
+## [1.2.6] - 2026-07-31
+
+### Security
+
+- Update dependencies to mitigate [CVE-2026-66373](https://nvd.nist.gov/vuln/detail/CVE-2026-66373) and [CVE-2026-14257](https://github.com/advisories/GHSA-mh99-v99m-4gvg).
+
+### Changed
+
+- Refactor launchLiveRace.ts to reduce its cognitive complexity.
+- Refactor liveBroadcastHandler.ts to reduce its cognitive complexity.
+- Refactor LiveRace.tsx to remove use of void operator, reduce nesting, and reduce cognitive complexity.
+
 ## [1.2.5] - 2026-07-24
 
 ### Security

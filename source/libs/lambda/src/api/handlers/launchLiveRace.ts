@@ -3,7 +3,7 @@
 
 import { StartExecutionCommand } from '@aws-sdk/client-sfn';
 import type { Operation } from '@aws-smithy/server-common';
-import { leaderboardDao, liveQueueItemDao, type ResourceId } from '@deepracer-indy/database';
+import { leaderboardDao, liveQueueItemDao, type LeaderboardItem, type ResourceId } from '@deepracer-indy/database';
 import {
   BadRequestError,
   ConflictError,
@@ -19,15 +19,11 @@ import type { HandlerContext } from '../types/apiGatewayHandlerContext.js';
 import { getApiGatewayHandler } from '../utils/apiGateway.js';
 import { instrumentOperation } from '../utils/instrumentation/instrumentOperation.js';
 
-export const LaunchLiveRaceOperation: Operation<
-  LaunchLiveRaceServerInput,
-  LaunchLiveRaceServerOutput,
-  HandlerContext
-> = async (input, context) => {
-  const leaderboardId = input.leaderboardId as ResourceId;
-  const { profileId } = context;
-  const leaderboard = await leaderboardDao.load({ leaderboardId });
-
+/**
+ * Validates that the leaderboard is in a state that allows launching a live race.
+ * Throws BadRequestError or ConflictError if preconditions are not met.
+ */
+function validateLeaderboardCanLaunch(leaderboard: LeaderboardItem): void {
   if (!leaderboard.isLive) {
     throw new BadRequestError({ message: 'Not a live race.' });
   }
@@ -48,6 +44,18 @@ export const LaunchLiveRaceOperation: Operation<
       throw new BadRequestError({ message: 'Cannot start before scheduled time.' });
     }
   }
+}
+
+export const LaunchLiveRaceOperation: Operation<
+  LaunchLiveRaceServerInput,
+  LaunchLiveRaceServerOutput,
+  HandlerContext
+> = async (input, context) => {
+  const leaderboardId = input.leaderboardId as ResourceId;
+  const { profileId } = context;
+  const leaderboard = await leaderboardDao.load({ leaderboardId });
+
+  validateLeaderboardCanLaunch(leaderboard);
 
   const nextPending = await liveQueueItemDao.getNextPending({ leaderboardId });
   if (!nextPending) {

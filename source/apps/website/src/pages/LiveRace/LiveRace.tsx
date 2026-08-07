@@ -5,18 +5,16 @@ import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import ButtonDropdown from '@cloudscape-design/components/button-dropdown';
 import Flashbar from '@cloudscape-design/components/flashbar';
-import Grid from '@cloudscape-design/components/grid';
 import Header from '@cloudscape-design/components/header';
 import Modal from '@cloudscape-design/components/modal';
 import ProgressBar from '@cloudscape-design/components/progress-bar';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
 import { UserGroups } from '@deepracer-indy/typescript-client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import deepRacerLogo from '#assets/deepracer_logo.svg';
 import { useAppDispatch } from '#hooks/useAppDispatch.js';
 import { useLiveRaceMqtt } from '#hooks/useLiveRaceMqtt.js';
 import type { LiveRaceEvent } from '#pages/LiveRace/types/events.js';
@@ -39,14 +37,11 @@ import { displayInfoNotification, displaySuccessNotification } from '#store/noti
 import { checkUserGroupMembership } from '#utils/authUtils.js';
 import { millisToMinutesAndSeconds } from '#utils/dateTimeUtils.js';
 
-import LeaderboardPanel from './components/LeaderboardPanel';
-import ParticipantNotificationToast from './components/ParticipantNotificationToast';
-import QueueManagementPanel from './components/QueueManagementPanel';
+import BroadcastContent from './components/BroadcastContent';
+import NormalContent from './components/NormalContent';
+import type { QueueItem } from './components/QueueManagementPanel';
 import RaceInfoPanel from './components/RaceInfoPanel';
-import RaceProgressBar from './components/RaceProgressBar';
 import RacerInfoBanner from './components/RacerInfoBanner';
-import VideoPanel from './components/VideoPanel';
-import WinnerOverlay from './components/WinnerOverlay';
 import { applyEvent, initialState } from './liveRaceState.js';
 import { mapLiveEventStatusToRaceStatus } from './mapLiveEventStatusToRaceStatus.js';
 
@@ -184,8 +179,16 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
   }, [__forceFacilitator]);
 
   const onReconnect = useCallback(() => {
-    void refetchLiveState();
-    void refetchQueue();
+    refetchLiveState()
+      .unwrap()
+      .catch((error: unknown) => {
+        console.error('Failed to refetch live race state', { error });
+      });
+    refetchQueue()
+      .unwrap()
+      .catch((error: unknown) => {
+        console.error('Failed to refetch live queue', { error });
+      });
   }, [refetchLiveState, refetchQueue]);
 
   const onEvent = useCallback(
@@ -325,7 +328,11 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
       .catch(() => setRaceState((state) => ({ ...state, raceStatus: 'IN_PROGRESS', isExecutionRunning: false })));
   };
   const handleQueueReorder = (submissionId: string, afterSubmissionId: string | null) => {
-    void reorderLiveQueue({ leaderboardId, submissionId, afterSubmissionId: afterSubmissionId ?? undefined }).unwrap();
+    reorderLiveQueue({ leaderboardId, submissionId, afterSubmissionId: afterSubmissionId ?? undefined })
+      .unwrap()
+      .catch((error: unknown) => {
+        console.error('Failed to reorder live queue', { error });
+      });
   };
   const handleQueueRemove = (submissionId: string) => {
     const prevQueueItems = raceState.queueItems;
@@ -343,6 +350,29 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
     const prevStreamUrl = raceState.streamUrl;
     const prevParticipantName = raceState.participantName;
     const prevModelName = raceState.modelName;
+
+    const onRefetchComplete = () => {
+      setIsResetting(false);
+      setResetSuccess(true);
+      setTimeout(() => setResetSuccess(false), 5000);
+    };
+    const onRefetchError = (error: unknown) => {
+      console.error('Failed to refetch state after queue reset', { error });
+      setIsResetting(false);
+    };
+    const restoreQueueItem = (i: QueueItem): QueueItem =>
+      i.submissionId === submissionId ? { ...i, status: prevStatus ?? ('PENDING' as const) } : i;
+    const onResetError = () => {
+      setRaceState((state) => ({
+        ...state,
+        ...(isCurrentlyRunning
+          ? { streamUrl: prevStreamUrl, participantName: prevParticipantName, modelName: prevModelName }
+          : {}),
+        queueItems: state.queueItems.map(restoreQueueItem),
+      }));
+      setIsResetting(false);
+    };
+
     setIsResetting(true);
     setRaceState((state) => ({
       ...state,
@@ -355,112 +385,42 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
       .unwrap()
       .then(() => {
         setTimeout(() => {
-          void Promise.all([refetchLiveState(), refetchQueue()]).then(() => {
-            setIsResetting(false);
-            setResetSuccess(true);
-            setTimeout(() => setResetSuccess(false), 5000);
-          });
+          Promise.all([refetchLiveState().unwrap(), refetchQueue().unwrap()])
+            .then(onRefetchComplete)
+            .catch(onRefetchError);
         }, 30000);
       })
-      .catch(() => {
-        setRaceState((state) => ({
-          ...state,
-          ...(isCurrentlyRunning
-            ? { streamUrl: prevStreamUrl, participantName: prevParticipantName, modelName: prevModelName }
-            : {}),
-          queueItems: state.queueItems.map((i) =>
-            i.submissionId === submissionId ? { ...i, status: prevStatus ?? ('PENDING' as const) } : i,
-          ),
-        }));
-        setIsResetting(false);
-      });
+      .catch(onResetError);
   };
-
-  const content = isBroadcastMode ? (
-    <div className={`broadcastLayout${cursorHidden ? ' cursorHidden' : ''}`} data-testid="live-race-content">
-      <img src={deepRacerLogo} alt="DeepRacer on AWS" className="broadcastLogo" />
-      <SpaceBetween size="s">
-        <div className="broadcastRaceName">
-          {leaderboard?.name ?? leaderboardId}
-          {raceState.raceStatus === 'IN_PROGRESS' && (
-            <span className="liveBadge">
-              <span className="liveDot" /> {t('header.live')}
-            </span>
-          )}
-        </div>
-        <RacerInfoBanner participantName={raceState.participantName} avatar={raceState.currentAvatar ?? undefined} />
-        <VideoPanel
-          streamUrl={raceState.streamUrl}
-          participantName={raceState.participantName ?? ''}
-          modelName={raceState.modelName ?? ''}
-          allComplete={
-            raceState.queueItems.length > 0 &&
-            !raceState.queueItems.some((i) => i.status === 'PENDING' || i.status === 'IN_PROGRESS')
-          }
-          hasFailed={raceState.queueItems.some((i) => i.status === 'FAILED')}
-          winnerDeclared={raceState.raceStatus === 'COMPLETED'}
-          waitingForLaunch={
-            !raceState.isExecutionRunning &&
-            raceState.raceStatus !== 'COMPLETED' &&
-            raceState.queueItems.every((i) => i.status === 'PENDING')
-          }
-          isExecutionRunning={raceState.queueItems.some((i) => i.status === 'IN_PROGRESS')}
-        />
-        <RaceProgressBar completedModels={raceState.completedModels} totalModels={raceState.queueItems.length} />
-      </SpaceBetween>
-      <ParticipantNotificationToast lastEvent={lastNotificationEvent} currentProfileId={profile?.profileId ?? ''} />
-      <WinnerOverlay winner={raceState.winner} />
-    </div>
-  ) : (
-    <div data-testid="live-race-content">
-      <SpaceBetween size="m">
-        <Grid gridDefinition={[{ colspan: { default: 12, s: 8 } }, { colspan: { default: 12, s: 4 } }]}>
-          <SpaceBetween size="s">
-            <VideoPanel
-              streamUrl={raceState.streamUrl}
-              participantName={raceState.participantName ?? ''}
-              modelName={raceState.modelName ?? ''}
-              allComplete={
-                raceState.queueItems.length > 0 &&
-                !raceState.queueItems.some((i) => i.status === 'PENDING' || i.status === 'IN_PROGRESS')
-              }
-              hasFailed={raceState.queueItems.some((i) => i.status === 'FAILED')}
-              winnerDeclared={raceState.raceStatus === 'COMPLETED'}
-              waitingForLaunch={
-                !raceState.isExecutionRunning &&
-                raceState.raceStatus !== 'COMPLETED' &&
-                raceState.queueItems.every((i) => i.status === 'PENDING')
-              }
-              isExecutionRunning={raceState.queueItems.some((i) => i.status === 'IN_PROGRESS')}
-            />
-            <RaceProgressBar completedModels={raceState.completedModels} totalModels={raceState.queueItems.length} />
-          </SpaceBetween>
-          <LeaderboardPanel rankings={raceState.rankings} timingMethod={leaderboard?.timingMethod} />
-        </Grid>
-        <QueueManagementPanel
-          items={raceState.queueItems}
-          onReorder={isFacilitator ? handleQueueReorder : () => undefined}
-          onRemove={isFacilitator ? handleQueueRemove : () => undefined}
-          onReset={isFacilitator ? handleQueueReset : () => undefined}
-          isRaceCompleted={raceState.raceStatus === 'COMPLETED'}
-          readOnly={!isFacilitator}
-          autolaunchEnabled={isFacilitator ? raceState.autolaunchEnabled : undefined}
-          submissionPeriodOpen={isFacilitator ? raceState.submissionPeriodOpen : undefined}
-          onToggleAutolaunch={isFacilitator ? handleToggleAutolaunch : undefined}
-          onToggleSubmissions={isFacilitator ? handleToggleSubmissions : undefined}
-        />
-      </SpaceBetween>
-      <ParticipantNotificationToast lastEvent={lastNotificationEvent} currentProfileId={profile?.profileId ?? ''} />
-      <WinnerOverlay winner={raceState.winner} onDismiss={() => setRaceState((prev) => ({ ...prev, winner: null }))} />
-    </div>
-  );
 
   if (isAuthLoading) {
     return null;
   }
 
   if (isBroadcastMode) {
-    return content;
+    return (
+      <BroadcastContent
+        raceState={raceState}
+        leaderboardName={leaderboard?.name}
+        leaderboardId={leaderboardId}
+        cursorHidden={cursorHidden}
+        lastNotificationEvent={lastNotificationEvent}
+        profileId={profile?.profileId ?? ''}
+      />
+    );
+  }
+
+  let headerDescription: ReactNode;
+  if (raceState.raceStatus === 'IN_PROGRESS') {
+    headerDescription = (
+      <span className="liveBadge">
+        <span className="liveDot" /> {t('header.live')}
+      </span>
+    );
+  } else if (raceState.raceStatus === 'COMPLETED' || liveRaceState?.race.liveEventStatus === 'COMPLETED') {
+    headerDescription = <StatusIndicator type="success">{t('header.raceCompleted')}</StatusIndicator>;
+  } else {
+    headerDescription = <StatusIndicator type="pending">{t('header.startingSoon')}</StatusIndicator>;
   }
 
   return (
@@ -468,17 +428,7 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
       <SpaceBetween size="s">
         <Header
           variant="h1"
-          description={
-            raceState.raceStatus === 'IN_PROGRESS' ? (
-              <span className="liveBadge">
-                <span className="liveDot" /> {t('header.live')}
-              </span>
-            ) : raceState.raceStatus === 'COMPLETED' || liveRaceState?.race.liveEventStatus === 'COMPLETED' ? (
-              <StatusIndicator type="success">{t('header.raceCompleted')}</StatusIndicator>
-            ) : (
-              <StatusIndicator type="pending">{t('header.startingSoon')}</StatusIndicator>
-            )
-          }
+          description={headerDescription}
           actions={
             <SpaceBetween size="xs" direction="horizontal">
               {isFacilitator && (
@@ -545,7 +495,19 @@ const LiveRace = ({ __forceFacilitator }: LiveRaceProps = {}) => {
         {isFacilitator && resetSuccess && (
           <Flashbar items={[{ type: 'success', content: t('facilitatorPanel.resetSuccess'), id: 'reset-success' }]} />
         )}
-        {content}
+        <NormalContent
+          raceState={raceState}
+          timingMethod={leaderboard?.timingMethod}
+          isFacilitator={isFacilitator}
+          lastNotificationEvent={lastNotificationEvent}
+          profileId={profile?.profileId ?? ''}
+          onQueueReorder={handleQueueReorder}
+          onQueueRemove={handleQueueRemove}
+          onQueueReset={handleQueueReset}
+          onToggleAutolaunch={handleToggleAutolaunch}
+          onToggleSubmissions={handleToggleSubmissions}
+          onWinnerDismiss={() => setRaceState((prev) => ({ ...prev, winner: null }))}
+        />
       </SpaceBetween>
 
       <Modal

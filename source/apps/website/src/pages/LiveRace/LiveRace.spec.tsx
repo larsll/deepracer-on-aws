@@ -11,6 +11,7 @@ import {
   RemoveLiveQueueItemCommand,
   ResetLiveQueueModelCommand,
   ReorderLiveQueueCommand,
+  GetProfileCommand,
   Leaderboard,
   LiveEventStatus,
   ListLiveQueueItemsCommand,
@@ -1243,6 +1244,236 @@ describe('<LiveRace />', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('racer-info-banner')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('error handling for async operations', () => {
+    it('logs error when refetchLiveState fails on reconnect', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        /** no-op */
+      });
+      mockDeepRacerClient.on(GetProfileCommand).resolves({});
+      mockDeepRacerClient.on(GetLeaderboardCommand).resolves({
+        leaderboard: { leaderboardId: 'test-lb', name: 'Test Race' } as unknown as Leaderboard,
+      });
+      const liveStateResponse = {
+        race: {
+          leaderboardId: 'test-lb',
+          name: 'Test Race',
+          liveEventStatus: LiveEventStatus.IN_PROGRESS,
+          isLive: true,
+          autoLaunchEnabled: false,
+          submissionPeriodOpen: false,
+        },
+        queue: { totalModels: 0, completedModels: 0, pendingModels: 0, inProgressModels: 0 },
+        rankings: [],
+      };
+      // First call succeeds (initial mount), subsequent calls fail (reconnect)
+      mockDeepRacerClient
+        .on(GetLiveRaceStateCommand)
+        .resolvesOnce(liveStateResponse)
+        .rejects(new Error('network error'));
+      mockDeepRacerClient.on(ListLiveQueueItemsCommand).resolves({ items: [] });
+
+      let capturedOnReconnect: (() => void) | null = null;
+      vi.mocked(useLiveRaceMqtt).mockImplementation((_id, options) => {
+        capturedOnReconnect = (options as { onReconnect: () => void }).onReconnect;
+        return { connectionStatus: ConnectionStatus.CONNECTED };
+      });
+
+      render(<LiveRace />, {
+        componentRoute: '/races/:leaderboardId/live',
+        initialRouteEntries: ['/races/test-lb/live'],
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('live-race-content')).toBeInTheDocument();
+      });
+
+      act(() => {
+        capturedOnReconnect?.();
+      });
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to refetch live race state', expect.anything());
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('logs error when refetchQueue fails on reconnect', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        /** no-op */
+      });
+      mockDeepRacerClient.on(GetProfileCommand).resolves({});
+      mockDeepRacerClient.on(GetLeaderboardCommand).resolves({
+        leaderboard: { leaderboardId: 'test-lb', name: 'Test Race' } as unknown as Leaderboard,
+      });
+      mockDeepRacerClient.on(GetLiveRaceStateCommand).resolves({
+        race: {
+          leaderboardId: 'test-lb',
+          name: 'Test Race',
+          liveEventStatus: LiveEventStatus.IN_PROGRESS,
+          isLive: true,
+          autoLaunchEnabled: false,
+          submissionPeriodOpen: false,
+        },
+        queue: { totalModels: 0, completedModels: 0, pendingModels: 0, inProgressModels: 0 },
+        rankings: [],
+      });
+      // First call succeeds (initial mount), subsequent calls fail (reconnect)
+      mockDeepRacerClient.on(ListLiveQueueItemsCommand).resolvesOnce({ items: [] }).rejects(new Error('network error'));
+
+      let capturedOnReconnect: (() => void) | null = null;
+      vi.mocked(useLiveRaceMqtt).mockImplementation((_id, options) => {
+        capturedOnReconnect = (options as { onReconnect: () => void }).onReconnect;
+        return { connectionStatus: ConnectionStatus.CONNECTED };
+      });
+
+      render(<LiveRace />, {
+        componentRoute: '/races/:leaderboardId/live',
+        initialRouteEntries: ['/races/test-lb/live'],
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('live-race-content')).toBeInTheDocument();
+      });
+
+      act(() => {
+        capturedOnReconnect?.();
+      });
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to refetch live queue', expect.anything());
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('logs error when reorderLiveQueue fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        /** no-op */
+      });
+      mockCheckUserGroupMembership.mockResolvedValue(true);
+      mockDeepRacerClient.on(GetLeaderboardCommand).resolves({
+        leaderboard: {
+          leaderboardId: 'test-lb',
+          name: 'Test Race',
+          liveEventTime: new Date(Date.now() - 60_000),
+        } as unknown as Leaderboard,
+      });
+      mockDeepRacerClient.on(GetLiveRaceStateCommand).resolves({
+        race: {
+          leaderboardId: 'test-lb',
+          name: 'Test Race',
+          liveEventStatus: LiveEventStatus.IN_PROGRESS,
+          isLive: true,
+          autoLaunchEnabled: false,
+          submissionPeriodOpen: false,
+        },
+        queue: { totalModels: 2, completedModels: 0, pendingModels: 2, inProgressModels: 0 },
+        rankings: [],
+      });
+      mockDeepRacerClient.on(ListLiveQueueItemsCommand).resolves({
+        items: [
+          {
+            leaderboardId: 'test-lb',
+            submissionId: 'sub-1',
+            profileId: 'p1',
+            participantName: 'Alice',
+            modelName: 'SpeedDemon',
+            queuePosition: 'a',
+            status: 'PENDING',
+            resetCount: 0,
+            submittedAt: new Date('2026-01-01T00:00:00Z'),
+          },
+          {
+            leaderboardId: 'test-lb',
+            submissionId: 'sub-2',
+            profileId: 'p2',
+            participantName: 'Bob',
+            modelName: 'TurboBot',
+            queuePosition: 'b',
+            status: 'PENDING',
+            resetCount: 0,
+            submittedAt: new Date('2026-01-01T00:01:00Z'),
+          },
+        ],
+      });
+      mockDeepRacerClient.on(ReorderLiveQueueCommand).rejects(new Error('reorder failed'));
+
+      render(<LiveRace />, {
+        componentRoute: '/races/:leaderboardId/live',
+        initialRouteEntries: ['/races/test-lb/live'],
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('move-down-sub-1')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('move-down-sub-1'));
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to reorder live queue', expect.anything());
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('clears winner state when winner overlay is dismissed', async () => {
+      mockCheckUserGroupMembership.mockResolvedValue(false);
+      mockDeepRacerClient.on(GetLiveRaceStateCommand).resolves({
+        race: {
+          leaderboardId: 'test-lb',
+          name: 'Test Race',
+          liveEventStatus: LiveEventStatus.IN_PROGRESS,
+          isLive: true,
+          autoLaunchEnabled: false,
+          submissionPeriodOpen: false,
+        },
+        queue: { totalModels: 0, completedModels: 0, pendingModels: 0, inProgressModels: 0 },
+        rankings: [],
+      });
+      mockDeepRacerClient.on(ListLiveQueueItemsCommand).resolves({ items: [] });
+
+      let capturedOnEvent: ((e: unknown) => void) | null = null;
+      vi.mocked(useLiveRaceMqtt).mockImplementation((_id, options) => {
+        capturedOnEvent = (options as { onEvent: (e: unknown) => void }).onEvent;
+        return { connectionStatus: ConnectionStatus.CONNECTED };
+      });
+
+      render(<LiveRace />, {
+        componentRoute: '/races/:leaderboardId/live',
+        initialRouteEntries: ['/races/test-lb/live'],
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('live-race-content')).toBeInTheDocument();
+      });
+
+      // Fire a WINNER_DECLARED event to show the overlay
+      act(() => {
+        capturedOnEvent?.({
+          eventType: 'WINNER_DECLARED',
+          leaderboardId: 'test-lb',
+          timestamp: '2026-01-01T00:00:00Z',
+          winner: {
+            submissionId: 'sub-1',
+            participantName: 'Alice',
+            modelName: 'SpeedDemon',
+            bestLapTime: 12000,
+            winnerDeclaredAt: '2026-01-01T00:00:00Z',
+          },
+        });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('winner-overlay')).toBeInTheDocument();
+      });
+
+      // Dismiss the winner overlay
+      fireEvent.click(screen.getByTestId('winner-overlay-dismiss'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('winner-overlay')).not.toBeInTheDocument();
       });
     });
   });

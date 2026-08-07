@@ -299,64 +299,74 @@ export const publishToIoT = async (leaderboardId: ResourceId, event: Record<stri
 const isLiveAndActive = (leaderboard: { isLive?: boolean; liveEventStatus?: string }): boolean =>
   leaderboard.isLive === true && leaderboard.liveEventStatus !== LiveEventStatus.COMPLETED;
 
+type LeaderboardCache = Map<string, Awaited<ReturnType<typeof leaderboardDao.get>>>;
+
+/**
+ * Processes a single DynamoDB stream record: resolves the leaderboard, builds events,
+ * and publishes them to IoT Core. Throws on unrecoverable errors.
+ */
+const processRecord = async (parsed: ParsedRecord, leaderboardCache: LeaderboardCache): Promise<void> => {
+  let leaderboard;
+  if (leaderboardCache.has(parsed.leaderboardId)) {
+    leaderboard = leaderboardCache.get(parsed.leaderboardId);
+  } else {
+    leaderboard = await leaderboardDao.get({ leaderboardId: parsed.leaderboardId });
+    leaderboardCache.set(parsed.leaderboardId, leaderboard);
+  }
+  if (!leaderboard) return;
+
+  // For Leaderboard entity changes, use the record itself (it IS the leaderboard)
+  // For other entities, validate the leaderboard is live and active
+  if (parsed.entityType !== 'Leaderboard' && !isLiveAndActive(leaderboard)) return;
+
+  let events: Array<Record<string, unknown>> = [];
+
+  switch (parsed.entityType) {
+    case 'LiveQueueItem':
+      events = await buildEventsForLiveQueueItem(parsed);
+      break;
+    case 'Ranking':
+      events = await buildEventsForRanking(parsed);
+      break;
+    case 'Leaderboard': {
+      // Use stream record's newImage as authoritative for the Leaderboard record itself
+      // (DAO is eventually consistent and may return stale data, and the cache could hold
+      // stale state if earlier batch records populated it before this change arrived).
+      const streamIsLive = parsed.newImage.isLive?.BOOL === true;
+      if (!streamIsLive) return;
+      leaderboardCache.set(parsed.leaderboardId, {
+        ...leaderboard,
+        isLive: streamIsLive,
+        liveEventStatus: attr(parsed.newImage, 'liveEventStatus') as LiveEventStatus,
+      });
+      events = await buildEventsForLeaderboard(parsed);
+      break;
+    }
+    case 'Submission':
+      events = buildEventsForSubmission(parsed);
+      break;
+    default:
+      return;
+  }
+
+  if (events.length > 0) {
+    for (const evt of events) {
+      await publishToIoT(parsed.leaderboardId, evt);
+    }
+    logger.info('Published events', { count: events.length, leaderboardId: parsed.leaderboardId });
+  }
+};
+
 export const handler = async (event: DynamoDBStreamEvent): Promise<DynamoDBBatchResponse> => {
   const batchItemFailures: Array<{ itemIdentifier: string }> = [];
-  const leaderboardCache = new Map<string, Awaited<ReturnType<typeof leaderboardDao.get>>>();
+  const leaderboardCache: LeaderboardCache = new Map();
 
   for (const record of event.Records) {
     const parsed = parseRecord(record);
     if (!parsed) continue;
 
     try {
-      let leaderboard;
-      if (leaderboardCache.has(parsed.leaderboardId)) {
-        leaderboard = leaderboardCache.get(parsed.leaderboardId);
-      } else {
-        leaderboard = await leaderboardDao.get({ leaderboardId: parsed.leaderboardId });
-        leaderboardCache.set(parsed.leaderboardId, leaderboard);
-      }
-      if (!leaderboard) continue;
-
-      // For Leaderboard entity changes, use the record itself (it IS the leaderboard)
-      // For other entities, validate the leaderboard is live and active
-      if (parsed.entityType !== 'Leaderboard' && !isLiveAndActive(leaderboard)) continue;
-
-      let events: Array<Record<string, unknown>> = [];
-
-      switch (parsed.entityType) {
-        case 'LiveQueueItem':
-          events = await buildEventsForLiveQueueItem(parsed);
-          break;
-        case 'Ranking':
-          events = await buildEventsForRanking(parsed);
-          break;
-        case 'Leaderboard': {
-          // Use stream record's newImage as authoritative for the Leaderboard record itself
-          // (DAO is eventually consistent and may return stale data, and the cache could hold
-          // stale state if earlier batch records populated it before this change arrived).
-          const streamIsLive = parsed.newImage.isLive?.BOOL === true;
-          if (!streamIsLive) continue;
-          leaderboardCache.set(parsed.leaderboardId, {
-            ...leaderboard,
-            isLive: streamIsLive,
-            liveEventStatus: attr(parsed.newImage, 'liveEventStatus') as LiveEventStatus,
-          });
-          events = await buildEventsForLeaderboard(parsed);
-          break;
-        }
-        case 'Submission':
-          events = buildEventsForSubmission(parsed);
-          break;
-        default:
-          continue;
-      }
-
-      if (events.length > 0) {
-        for (const evt of events) {
-          await publishToIoT(parsed.leaderboardId, evt);
-        }
-        logger.info('Published events', { count: events.length, leaderboardId: parsed.leaderboardId });
-      }
+      await processRecord(parsed, leaderboardCache);
     } catch (error) {
       logger.error('Failed to process record', {
         error,
