@@ -309,7 +309,16 @@ export ADMIN_EMAIL='user@example.com'
 export NAMESPACE='deepracer1'
 ```
 
-3. Choose which delivery method to use for sending authentication emails. DeepRacer on AWS supports both Amazon Cognito and Amazon SES as delivery methods. Amazon Cognito is the default delivery method and requires no prior service approval, but is better suited for low volume use cases due to its limit of 50 emails per day per account. Amazon SES is also supported for higher sending limits and custom sender addresses, but requires a verified email address and production status.
+3. *(Optional)* To use an externally managed Cognito UserPool (corporate SSO, DREM, or a pool created from the `samples/external-userpool` CDK app), set the following variables. If omitted, DeepRacer on AWS provisions and manages its own pool.
+
+```
+export EXTERNAL_USER_POOL_ID='<region>_XXXXXXXXX'
+export EXTERNAL_USER_POOL_CLIENT_ID='XXXXXXXXXXXXXXXXXXXXXXXXXX'
+```
+
+See [docs/external-userpool-contract.md](docs/external-userpool-contract.md) for requirements the external pool must satisfy.
+
+4. Choose which delivery method to use for sending authentication emails. DeepRacer on AWS supports both Amazon Cognito and Amazon SES as delivery methods. Amazon Cognito is the default delivery method and requires no prior service approval, but is better suited for low volume use cases due to its limit of 50 emails per day per account. Amazon SES is also supported for higher sending limits and custom sender addresses, but requires a verified email address and production status.
 
 To use SES as the delivery method for authentication emails, follow the instructions in the [Prerequisites](https://docs.aws.amazon.com/solutions/latest/deepracer-on-aws/prerequisites.html) section of the implementation guide on how to set up a verified sender email address and request production status. Then:
 
