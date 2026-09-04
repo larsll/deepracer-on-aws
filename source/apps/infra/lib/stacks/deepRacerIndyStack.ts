@@ -121,6 +121,18 @@ export class DeepRacerIndyStack extends Stack {
     const simAppRepoName = this.node.getContext('SIMAPP_REPO_NAME');
     const validationRewardRepoName = this.node.getContext('REWARD_VALIDATION_REPO_NAME');
     const modelValidationRepoName = this.node.getContext('MODEL_VALIDATION_REPO_NAME');
+
+    // Optional: bring-your-own UserPool. When both context variables are supplied the stack
+    // imports the external pool instead of creating one. All trigger lambdas, groups, and
+    // email templates must be pre-configured on the external pool — see
+    // docs/external-userpool-contract.md for the full requirements.
+    //
+    // Usage:
+    //   cdk deploy --context externalUserPoolId=<region>_<id> \
+    //              --context externalUserPoolClientId=<clientId>
+    const externalUserPoolId: string | undefined = this.node.tryGetContext('externalUserPoolId');
+    const externalUserPoolClientId: string | undefined =
+      this.node.tryGetContext('externalUserPoolClientId');
     const { version: solutionVersion } = readManifest();
 
     // Create ECR nested stack with multiple repositories (one per image)
@@ -169,13 +181,21 @@ export class DeepRacerIndyStack extends Stack {
 
     const userIdentity = new UserIdentity(this, 'UserPool', {
       dynamoDBTable,
-      adminEmail: adminEmailParam.valueAsString,
       globalSettings,
       namespace,
-      isSesEnabled,
-      sesVerifiedEmail: sesVerifiedEmailParam.valueAsString,
-      sesIdentity: sesIdentityParam.valueAsString,
-      isSesIdentityProvided,
+      // External pool: skip admin bootstrap and SES email config
+      ...(externalUserPoolId
+        ? {
+            externalUserPoolId,
+            externalUserPoolClientId,
+          }
+        : {
+            adminEmail: adminEmailParam.valueAsString,
+            isSesEnabled,
+            sesVerifiedEmail: sesVerifiedEmailParam.valueAsString,
+            sesIdentity: sesIdentityParam.valueAsString,
+            isSesIdentityProvided,
+          }),
     });
 
     const { userPool, userPoolClient, identityPool, userRoles } = userIdentity;
@@ -328,6 +348,8 @@ export class DeepRacerIndyStack extends Stack {
       dynamoDBTable,
       queues: [apiStack.workflowJobQueue],
       alarms: {
+        // preSignUpErrorAlarm and postSignUpErrorAlarm are undefined when using an
+        // external UserPool (trigger lambdas are not deployed in that mode).
         systemAlarms: [
           userIdentity.preSignUpErrorAlarm,
           userIdentity.postSignUpErrorAlarm,
@@ -335,7 +357,7 @@ export class DeepRacerIndyStack extends Stack {
           apiStack.apiConstruct.importModelWorkflow.lambdaErrorsAlarm,
           liveRaceWorkflow.workflowErrorsAlarm,
           liveRaceWorkflow.streamDlqAlarm,
-        ],
+        ].filter((a) => a !== undefined),
         emailAlarms: userIdentity.sesAlarms,
       },
       isSesEnabled,

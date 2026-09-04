@@ -74,6 +74,7 @@ const NewPasswordForm = () => {
       });
 
       // Update the user's profile with their chosen racer alias
+      // (the backend also syncs custom:racerName to Cognito)
       await updateProfile({
         alias: data.racerAlias,
       });
