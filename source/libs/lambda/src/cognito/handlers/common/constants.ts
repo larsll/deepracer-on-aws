@@ -5,4 +5,6 @@ export enum UserGroups {
   ADMIN = 'dr-admins',
   RACE_FACILITATORS = 'dr-race-facilitators',
   RACERS = 'dr-racers',
+  COMMENTATOR = 'dr-commentator',
+  REGISTRATION = 'dr-registration',
 }
