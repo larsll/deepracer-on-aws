@@ -154,11 +154,10 @@ export class DroaUserPoolStack extends Stack {
     const userPool = new UserPool(this, 'UserPool', {
       userPoolName: 'droa-external-userpool',
 
-      // Sign-in: email primary, username and preferred username also allowed
+      // Sign-in: email address or Cognito account ID (username)
       signInAliases: {
         email: true,
         username: true,
-        preferredUsername: true,
       },
       signInCaseSensitive: false,
 

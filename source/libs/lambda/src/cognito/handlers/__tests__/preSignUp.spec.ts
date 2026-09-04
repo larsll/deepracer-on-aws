@@ -294,13 +294,13 @@ describe('PreSignUp lambda', () => {
   });
 
   describe('racer alias functionality', () => {
-    it('should use provided racer alias from clientMetadata', async () => {
+    it('should use provided racer alias from userAttributes', async () => {
       const eventWithAlias: lambda.PreSignUpTriggerEvent = {
         ...event,
         request: {
           ...event.request,
-          clientMetadata: {
-            racerAlias: 'CustomRacer123',
+          userAttributes: {
+            'custom:racerName': 'CustomRacer123',
           },
         },
       };
@@ -317,12 +317,12 @@ describe('PreSignUp lambda', () => {
       });
     });
 
-    it('should fallback to default alias when no clientMetadata provided', async () => {
+    it('should fallback to default alias when no custom:racerName provided', async () => {
       const eventWithoutMetadata: lambda.PreSignUpTriggerEvent = {
         ...event,
         request: {
           ...event.request,
-          clientMetadata: undefined,
+          userAttributes: {},
         },
       };
 
@@ -343,8 +343,8 @@ describe('PreSignUp lambda', () => {
         ...event,
         request: {
           ...event.request,
-          clientMetadata: {
-            racerAlias: 'ab',
+          userAttributes: {
+            'custom:racerName': 'ab',
           },
         },
       };
@@ -359,8 +359,8 @@ describe('PreSignUp lambda', () => {
         ...event,
         request: {
           ...event.request,
-          clientMetadata: {
-            racerAlias: 'ThisAliasIsTooLongForTheValidation',
+          userAttributes: {
+            'custom:racerName': 'ThisAliasIsTooLongForTheValidation',
           },
         },
       };
@@ -378,8 +378,8 @@ describe('PreSignUp lambda', () => {
           ...event,
           request: {
             ...event.request,
-            clientMetadata: {
-              racerAlias: alias,
+            userAttributes: {
+              'custom:racerName': alias,
             },
           },
         };
@@ -398,8 +398,8 @@ describe('PreSignUp lambda', () => {
           ...event,
           request: {
             ...event.request,
-            clientMetadata: {
-              racerAlias: alias,
+            userAttributes: {
+              'custom:racerName': alias,
             },
           },
         };

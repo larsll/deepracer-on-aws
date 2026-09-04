@@ -23,8 +23,8 @@ import { useGetProfileQuery } from '#services/deepRacer/profileApi';
 import { displayErrorNotification } from '#store/notifications/notificationsSlice.js';
 import { getPath } from '#utils/pageUtils.js';
 
-// Accept email address, Cognito username, or racer alias (preferredUsername).
-// Cognito resolves the identifier against all three signInAliases on the pool.
+// Accept email address or Cognito account ID (username).
+// Cognito resolves the identifier against both signInAliases on the pool.
 const authValidationSchema = Yup.object().shape({
   password: Yup.string().required(i18n.t('auth:required')),
   identifier: Yup.string().required(i18n.t('auth:required')),

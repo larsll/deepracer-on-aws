@@ -51,7 +51,7 @@ export const handler = async (event: PreSignUpTriggerEvent): Promise<PreSignUpTr
           email: { S: email },
           userPoolId: { S: userPoolId },
           // Custom attributes — populated empty; updated on first login or profile edit
-          racerName: { S: event.request.userAttributes['custom:racerName'] ?? '' },
+          racerName: { S: event.request.userAttributes?.['custom:racerName'] ?? '' },
           countryCode: { S: event.request.userAttributes['custom:countryCode'] ?? '' },
           createdAt: { S: new Date().toISOString() },
         },

@@ -101,9 +101,8 @@ export const UpdateProfileOperation: Operation<
   // Update the profile in DynamoDB
   const profileItem = await profileDao.update({ profileId: targetProfileId }, attributes);
 
-  // Sync preferred_username and custom:racerName in Cognito when alias changes.
-  // This keeps the Cognito sign-in alias in sync so users can always log in
-  // with their current racer alias, not just their original one.
+  // Sync custom:racerName in Cognito when alias changes so the attribute
+  // reflects the current display name for any external consumers of the pool.
   if (attributes.alias) {
     const userPoolId = process.env.USER_POOL_ID;
     if (userPoolId) {
@@ -112,7 +111,6 @@ export const UpdateProfileOperation: Operation<
           UserPoolId: userPoolId,
           Username: targetProfileId,
           UserAttributes: [
-            { Name: 'preferred_username', Value: attributes.alias },
             { Name: 'custom:racerName', Value: attributes.alias },
           ],
         }),

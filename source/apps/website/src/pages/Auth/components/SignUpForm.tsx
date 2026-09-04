@@ -63,7 +63,6 @@ const SignUpForm = () => {
           // and Cognito can resolve it as a sign-in alias (preferred_username).
           userAttributes: {
             email: data.emailAddress,
-            preferred_username: data.racerAlias,
             'custom:racerName': data.racerAlias,
           },
         },

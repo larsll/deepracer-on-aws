@@ -7,7 +7,7 @@ import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { confirmSignIn, updateUserAttributes } from 'aws-amplify/auth';
+import { confirmSignIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -73,16 +73,8 @@ const NewPasswordForm = () => {
         challengeResponse: data.newPassword,
       });
 
-      // Sync preferred_username and custom:racerName in Cognito so the user
-      // can sign in with their chosen alias immediately after this flow.
-      await updateUserAttributes({
-        userAttributes: {
-          preferred_username: data.racerAlias,
-          'custom:racerName': data.racerAlias,
-        },
-      });
-
       // Update the user's profile with their chosen racer alias
+      // (the backend also syncs custom:racerName to Cognito)
       await updateProfile({
         alias: data.racerAlias,
       });

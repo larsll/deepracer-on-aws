@@ -208,10 +208,6 @@ export class UserIdentity extends Construct {
       });
 
       // Configure the user pool
-      // Note: preTokenGeneration trigger (DREM group aliases) is intentionally absent here.
-      // It is a DREM-specific concern and belongs in the feature/drem-integration branch.
-      // When using an external pool with DREM, configure that trigger on the external pool
-      // or use the sample in samples/external-userpool/ with enableDremGroupAliases: true.
       const ownedPool = new UserPool(this, 'UserPool', {
         lambdaTriggers: {
           preSignUp: preSignUpFn,
@@ -220,7 +216,6 @@ export class UserIdentity extends Construct {
         signInAliases: {
           email: true,
           username: true,
-          preferredUsername: true,
         },
         userPoolName: `${namespace}-${BASE_USER_POOL_NAME}`,
         signInCaseSensitive: false,

@@ -77,7 +77,7 @@ If the external pool cannot attach a `preSignUp` trigger, DRoA can create a prof
 
 ### 5. Sign-in Configuration
 
-The external pool's sign-in aliases must include at minimum **email**. Username and preferredUsername aliases are optional but recommended for consistency with the owned-pool behaviour.
+The external pool's sign-in aliases must include at minimum **email** and **username**. Users can log in with their email address or their Cognito account ID (internal username).
 
 `signInCaseSensitive` should be `false` (Cognito default for new pools).
 

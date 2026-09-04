@@ -61,12 +61,7 @@ async function CreateUser(userPoolId: string, username: string, emailAddress: st
             Name: 'email_verified',
             Value: 'true',
           },
-          // Set preferred_username and custom:racerName so the user can sign in
-          // with their username (racer alias) in addition to their email address.
-          {
-            Name: 'preferred_username',
-            Value: username,
-          },
+          // Set custom:racerName so the display name is available as a Cognito attribute.
           {
             Name: 'custom:racerName',
             Value: username,

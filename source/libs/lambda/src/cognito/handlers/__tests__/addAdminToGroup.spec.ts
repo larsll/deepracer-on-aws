@@ -117,6 +117,10 @@ describe('AddAdminToGroup Lambda', () => {
               Name: 'email_verified',
               Value: 'true',
             },
+            {
+              Name: 'custom:racerName',
+              Value: 'admin4d2',
+            },
           ],
         });
 
