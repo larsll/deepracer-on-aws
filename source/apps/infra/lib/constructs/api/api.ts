@@ -194,6 +194,9 @@ export class Api extends Construct {
       functions.StopModel,
       functions.GetGlobalSetting,
       functions.UpdateGlobalSetting,
+      // GetProfile reads usageQuotas.newUser to JIT-provision a profile on first login
+      // when the preSignUp trigger did not create one (admin-created / SSO users).
+      functions.GetProfile,
     ];
     appConfigConsumers.forEach((fn) => grantAppConfigAccess(this, fn, props.globalSettings));
 

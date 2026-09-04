@@ -142,6 +142,46 @@ DRoA Application (API Gateway → Lambda → DynamoDB / S3 / IoT)
 
 ---
 
+## Initial admin setup
+
+When using an external UserPool, DRoA **does not** automatically create the initial admin user. You must create the user manually and add them to the `dr-admins` group after the DRoA stack has been deployed.
+
+### Using the AWS CLI
+
+```bash
+POOL_ID=eu-central-1_XXXXXXXXX   # your external pool ID
+ADMIN_EMAIL=admin@example.com
+REGION=eu-central-1
+
+# 1. Create the user — Cognito will send an invitation email with a temporary password
+aws cognito-idp admin-create-user \
+  --user-pool-id $POOL_ID \
+  --username $ADMIN_EMAIL \
+  --user-attributes Name=email,Value=$ADMIN_EMAIL Name=email_verified,Value=true \
+  --desired-delivery-mediums EMAIL \
+  --region $REGION
+
+# Note the Username value from the output (it is the Cognito account ID, not the email).
+USERNAME=<Username-from-above-output>
+
+# 2. Add the user to the admin group
+aws cognito-idp admin-add-user-to-group \
+  --user-pool-id $POOL_ID \
+  --username $USERNAME \
+  --group-name dr-admins \
+  --region $REGION
+```
+
+The invitation email contains the temporary password. On first sign-in the user will be prompted to set a new password and racer alias.
+
+### Using the AWS Console
+
+1. Open **Amazon Cognito → User pools → `<your pool>` → Users → Create user**
+2. Set **Email address**, tick **Send an email invitation**, and leave the password as auto-generated
+3. After the user is created, go to **Groups → dr-admins → Add user**
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
