@@ -23,15 +23,18 @@ import { useGetProfileQuery } from '#services/deepRacer/profileApi';
 import { displayErrorNotification } from '#store/notifications/notificationsSlice.js';
 import { getPath } from '#utils/pageUtils.js';
 
+// Accept email address or Cognito account ID (username).
+// Cognito resolves the identifier against both signInAliases on the pool.
 const authValidationSchema = Yup.object().shape({
   password: Yup.string().required(i18n.t('auth:required')),
-  emailAddress: Yup.string().required(i18n.t('auth:required')).email(i18n.t('auth:validEmailAddress')),
+  identifier: Yup.string().required(i18n.t('auth:required')),
 });
 
 const initialAuthValues: SignInValues = {
-  emailAddress: '',
+  identifier: '',
   password: '',
 };
+
 const SignInForm = () => {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
@@ -44,11 +47,12 @@ const SignInForm = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoadingSignIn, setIsLoadingSignIn] = useState(false);
+
   const onSubmit = async (data: SignInValues) => {
     try {
       setIsLoadingSignIn(true);
       const signInResult = await signIn({
-        username: data.emailAddress,
+        username: data.identifier,
         password: data.password,
       });
 
@@ -69,11 +73,12 @@ const SignInForm = () => {
       );
     }
   };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Container header={<Header variant="h2">{t('signin')}</Header>}>
         <SpaceBetween size="l">
-          <InputField type={'text'} name="emailAddress" control={control} label={t('email')} stretch />
+          <InputField type={'text'} name="identifier" control={control} label={t('identifier')} stretch />
           <InputField
             type={showPassword ? 'text' : 'password'}
             name="password"

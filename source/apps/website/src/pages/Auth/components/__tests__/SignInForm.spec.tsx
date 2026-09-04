@@ -137,14 +137,6 @@ describe('SignInForm', () => {
   });
 
   describe('form validation', () => {
-    it('shows error when email is invalid', async () => {
-      render(<SignInForm />);
-      fireEvent.change(screen.getByLabelText(/Email address/), { target: { value: 'invalid-email' } });
-      fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'Password123!' } });
-      fireEvent.click(screen.getByRole('button', { name: /Sign in/ }));
-      expect(await screen.findByText(/Must be a valid email address/)).toBeInTheDocument();
-    });
-
     it('shows error when required fields are empty', async () => {
       render(<SignInForm />);
       fireEvent.click(screen.getByRole('button', { name: /Sign in/ }));

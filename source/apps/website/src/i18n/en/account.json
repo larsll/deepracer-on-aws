@@ -7,6 +7,10 @@
   "yourPassword": "Your password",
   "deleteYourAccount": "Delete your Player account",
   "changePassword": "Change password",
+  "yourCountry": "Your country",
+  "countryPlaceholder": "Select your country",
+  "saveCountry": "Save",
+  "saveCountryError": "Failed to save country. Please try again.",
   "required": "Required",
   "passwordFormat": "Passwords must contain at least 8 characters uppercase, lowercase, number, and symbol.",
   "deleteAccountModal": {

@@ -61,6 +61,11 @@ async function CreateUser(userPoolId: string, username: string, emailAddress: st
             Name: 'email_verified',
             Value: 'true',
           },
+          // Set custom:racerName so the display name is available as a Cognito attribute.
+          {
+            Name: 'custom:racerName',
+            Value: username,
+          },
         ],
       }),
     );

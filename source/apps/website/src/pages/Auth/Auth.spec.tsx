@@ -21,7 +21,7 @@ describe('<Auth />', () => {
     await screen.findByText(i18n.t('common:serviceName'));
 
     // Container form
-    await screen.findByText(i18n.t('auth:email'));
+    await screen.findByText(i18n.t('auth:identifier'));
     await screen.findByText(i18n.t('auth:password'));
     await screen.findByText(i18n.t('auth:showPassword'));
     await screen.findByText(i18n.t('auth:forgotPassword'));
