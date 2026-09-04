@@ -31,8 +31,11 @@ export const PreSignUp: PreSignUpTriggerHandler = async (event) => {
 
   const { newUserComputeMinutesLimit, newUserModelCountLimit } = newUserLimits;
 
-  // Get racer alias from client metadata, fallback to default if not provided
-  const racerAlias = request.clientMetadata?.racerAlias || 'RacerAlias';
+  // Get racer alias from user attributes. The SignUpForm passes it as proper Cognito
+  // user attributes (preferred_username / custom:racerName). Prefer custom:racerName
+  // for case-preserving storage, fall back to preferred_username, then a default.
+  const racerAlias =
+    request.userAttributes?.['custom:racerName'] || request.userAttributes?.preferred_username || 'RacerAlias';
 
   // Validate alias format
   if (!isValidAlias(racerAlias)) {

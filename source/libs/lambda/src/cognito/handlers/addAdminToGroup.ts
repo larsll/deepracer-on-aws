@@ -68,14 +68,14 @@ const createUser = async (
   adminEmail: string,
 ): Promise<string> => {
   // Generate a unique username that's not an email (must start with letter, only alphanumeric and underscore allowed)
-  const timestamp = Date.now().toString(16); // Convert to base36 for shorter, alphanumeric result
+  const timestamp = Date.now().toString(16);
   const username = `admin${timestamp}`.slice(0, 15);
 
   await cognitoClient.send(
     new AdminCreateUserCommand({
       UserPoolId: userPoolId,
       Username: username,
-      MessageAction: 'SUPPRESS', // Suppress initial email - will be sent later with website URL
+      MessageAction: 'SUPPRESS', // Suppress initial email — will be sent later with website URL
       DesiredDeliveryMediums: ['EMAIL'],
       UserAttributes: [
         {
@@ -85,6 +85,16 @@ const createUser = async (
         {
           Name: 'email_verified',
           Value: 'true',
+        },
+        // Set preferred_username and custom:racerName so the admin can sign in
+        // with their alias in addition to their email address.
+        {
+          Name: 'preferred_username',
+          Value: username,
+        },
+        {
+          Name: 'custom:racerName',
+          Value: username,
         },
       ],
     }),

@@ -59,11 +59,12 @@ const SignUpForm = () => {
         username: newUserId,
         password: data.password,
         options: {
+          // Pass alias as proper Cognito user attributes so the preSignUp trigger
+          // and Cognito can resolve it as a sign-in alias (preferred_username).
           userAttributes: {
             email: data.emailAddress,
-          },
-          clientMetadata: {
-            racerAlias: data.racerAlias,
+            preferred_username: data.racerAlias,
+            'custom:racerName': data.racerAlias,
           },
         },
       });
@@ -77,6 +78,7 @@ const SignUpForm = () => {
       );
     }
   };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Container

@@ -16,6 +16,7 @@ export interface AuthValues {
 }
 
 export interface SignInValues {
-  emailAddress: string;
+  /** Email address, Cognito username, or racer alias (preferredUsername). */
+  identifier: string;
   password: string;
 }

@@ -207,23 +207,15 @@ export class UserIdentity extends Construct {
         alarmDescription: 'Alert when a PostSignUpFunction failure occurs',
       });
 
-      // Configure the pre-token-generation hook (injects DREM group aliases for SSO)
-      const preTokenGenerationFn = new NodeLambdaFunction(this, 'PreTokenGenerationFunction', {
-        entry: path.join(
-          __dirname,
-          '../../../../../libs/lambda/src/cognito/handlers/preTokenGeneration.ts',
-        ),
-        functionName: `${functionNamePrefix}-PreTokenGenerationFn`,
-        logGroupCategory: LogGroupCategory.USER_IDENTITY,
-        namespace: props.namespace,
-      });
-
       // Configure the user pool
+      // Note: preTokenGeneration trigger (DREM group aliases) is intentionally absent here.
+      // It is a DREM-specific concern and belongs in the feature/drem-integration branch.
+      // When using an external pool with DREM, configure that trigger on the external pool
+      // or use the sample in samples/external-userpool/ with enableDremGroupAliases: true.
       const ownedPool = new UserPool(this, 'UserPool', {
         lambdaTriggers: {
           preSignUp: preSignUpFn,
           postConfirmation: postConfirmationFn,
-          preTokenGeneration: preTokenGenerationFn,
         },
         signInAliases: {
           email: true,
