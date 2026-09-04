@@ -6,8 +6,9 @@
  * Bulk user creation script for DeepRacer on AWS.
  *
  * Creates Cognito users without email addresses from a CSV file. Each user is
- * assigned a permanent password and added to the dr-racers group. The preSignUp
- * Lambda trigger fires automatically to create the matching DynamoDB profile.
+ * assigned a temporary password and required to change it on first sign-in.
+ * Users are added to the dr-racers group. The preSignUp Lambda trigger fires
+ * automatically to create the matching DynamoDB profile.
  *
  * Usage:
  *   pnpm tsx scripts/bulk-create-users.mts --user-pool-id <id> --csv <file> [options]
@@ -362,13 +363,13 @@ async function createUser(
     }),
   );
 
-  // 2. Set a permanent password so the user is not forced to change it on first sign-in.
+  // 2. Set a temporary password so the user is forced to change it on first sign-in.
   await client.send(
     new AdminSetUserPasswordCommand({
       UserPoolId: userPoolId,
       Username: row.username,
       Password: row.password,
-      Permanent: true,
+      Permanent: false,
     }),
   );
 
