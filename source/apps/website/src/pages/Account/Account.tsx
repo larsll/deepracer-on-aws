@@ -17,13 +17,16 @@ import enLocale from 'i18n-iso-countries/langs/en.json';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useAppDispatch } from '#hooks/useAppDispatch.js';
 import { getUserEmail } from '#utils/authUtils.js';
+import { displayErrorNotification } from '#store/notifications/notificationsSlice.js';
 
 import ChangePasswordModal from './components/ChangePasswordModal/ChangePasswordModal';
 import DeleteAccountModal from './components/DeleteAccountModal/DeleteAccountModal';
 
 const Account = () => {
   const { t } = useTranslation('account');
+  const dispatch = useAppDispatch();
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | undefined>('');
@@ -59,9 +62,14 @@ const Account = () => {
   const handleSaveCountry = async () => {
     if (!pendingCountry) return;
     setIsSavingCountry(true);
-    await updateUserAttributes({ userAttributes: { 'custom:countryCode': pendingCountry } });
-    setUserCountry(pendingCountry);
-    setIsSavingCountry(false);
+    try {
+      await updateUserAttributes({ userAttributes: { 'custom:countryCode': pendingCountry } });
+      setUserCountry(pendingCountry);
+    } catch {
+      dispatch(displayErrorNotification({ content: t('saveCountryError'), id: 'saveCountryError' }));
+    } finally {
+      setIsSavingCountry(false);
+    }
   };
 
   const handleDeleteAccountClick = () => {
