@@ -41,6 +41,7 @@ const ManageInstance = () => {
   if (profiles.data === undefined) {
     profiles.data = [];
   }
+  const refetchProfiles = profiles.refetch;
 
   const currentUserProfile = useGetProfileQuery();
 
@@ -90,6 +91,7 @@ const ManageInstance = () => {
               currentUserProfileId={currentUserProfile.data?.profileId}
               onInviteUser={() => setIsInviteUserModalOpen(true)}
               onNewBasicUser={() => setIsNewBasicUserModalOpen(true)}
+              onRefresh={refetchProfiles}
               onDeleteUser={(user: Profile, clearSelection: () => void) => {
                 setSelectedUserToDelete(user);
                 setClearTableSelection(() => clearSelection);

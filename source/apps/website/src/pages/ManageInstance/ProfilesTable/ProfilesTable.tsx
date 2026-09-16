@@ -29,6 +29,7 @@ interface ProfilesTableProps {
   currentUserProfileId?: string;
   onInviteUser: () => void;
   onNewBasicUser: () => void;
+  onRefresh: () => void;
   onDeleteUser: (user: Profile, clearSelection: () => void) => void;
   onDeleteUserModels: (user: Profile) => void;
   onUpdateUserQuotas: (user: Profile, clearSelection: () => void) => void;
@@ -40,6 +41,7 @@ const ProfilesTable = ({
   currentUserProfileId,
   onInviteUser,
   onNewBasicUser,
+  onRefresh,
   onDeleteUser,
   onDeleteUserModels,
   onUpdateUserQuotas,
@@ -84,11 +86,6 @@ const ProfilesTable = ({
           id: 'name',
           header: 'Alias',
           cell: (item) => item.alias,
-        },
-        {
-          id: 'country',
-          header: 'Country',
-          cell: (item) => item.country || '-',
         },
         {
           id: 'role',
@@ -185,6 +182,7 @@ const ProfilesTable = ({
             description={selectedItems.length > 0 ? `${selectedItems.length} selected` : undefined}
             actions={
               <SpaceBetween direction="horizontal" size="xs">
+              <Button iconName="refresh" variant="icon" onClick={onRefresh} ariaLabel="Refresh users" />
               <Button onClick={onNewBasicUser} disabled={selectedItems.length > 0}>
                 New basic user
               </Button>
