@@ -13,6 +13,7 @@ import ChangeUserRoleModal from './ChangeUserRoleModal';
 import DeleteUserModal from './DeleteUserModal';
 import DeleteUserModelsModal from './DeleteUserModelsModal';
 import InviteUserModal from './InviteUserModal/InviteUserModal.js';
+import NewBasicUserModal from './NewBasicUserModal/NewBasicUserModal.js';
 import ProfilesTable from './ProfilesTable/ProfilesTable';
 import InstanceQuotasModal from './QuotasModal/InstanceQuotas';
 import NewUserQuotasModal from './QuotasModal/NewUserQuotas';
@@ -25,6 +26,7 @@ const ManageInstance = () => {
   const [isInstanceQuotasModalOpen, setIsInstanceQuotasModalOpen] = useState<boolean>(false);
   const [isNewUserQuotasModalOpen, setIsNewUserQuotasModalOpen] = useState<boolean>(false);
   const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState<boolean>(false);
+  const [isNewBasicUserModalOpen, setIsNewBasicUserModalOpen] = useState<boolean>(false);
   const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<boolean>(false);
   const [isDeleteUserModelsModalOpen, setIsDeleteUserModelsModalOpen] = useState<boolean>(false);
   const [isUserQuotasModalOpen, setIsUserQuotasModalOpen] = useState<boolean>(false);
@@ -87,6 +89,7 @@ const ManageInstance = () => {
               profiles={profiles.data}
               currentUserProfileId={currentUserProfile.data?.profileId}
               onInviteUser={() => setIsInviteUserModalOpen(true)}
+              onNewBasicUser={() => setIsNewBasicUserModalOpen(true)}
               onDeleteUser={(user: Profile, clearSelection: () => void) => {
                 setSelectedUserToDelete(user);
                 setClearTableSelection(() => clearSelection);
@@ -114,6 +117,7 @@ const ManageInstance = () => {
         toolsHide
       />
       <InviteUserModal isOpen={isInviteUserModalOpen} setIsOpen={setIsInviteUserModalOpen} />
+      <NewBasicUserModal isOpen={isNewBasicUserModalOpen} setIsOpen={setIsNewBasicUserModalOpen} />
       <DeleteUserModal
         isOpen={isDeleteUserModalOpen}
         setIsOpen={setIsDeleteUserModalOpen}

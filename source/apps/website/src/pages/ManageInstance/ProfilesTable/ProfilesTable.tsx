@@ -28,6 +28,7 @@ interface ProfilesTableProps {
   profiles: Profile[];
   currentUserProfileId?: string;
   onInviteUser: () => void;
+  onNewBasicUser: () => void;
   onDeleteUser: (user: Profile, clearSelection: () => void) => void;
   onDeleteUserModels: (user: Profile) => void;
   onUpdateUserQuotas: (user: Profile, clearSelection: () => void) => void;
@@ -38,6 +39,7 @@ const ProfilesTable = ({
   profiles,
   currentUserProfileId,
   onInviteUser,
+  onNewBasicUser,
   onDeleteUser,
   onDeleteUserModels,
   onUpdateUserQuotas,
@@ -76,12 +78,17 @@ const ProfilesTable = ({
         {
           id: 'email',
           header: 'Email',
-          cell: (item) => item.emailAddress || '-/-',
+          cell: (item) => item.emailAddress || '-',
         },
         {
           id: 'name',
           header: 'Alias',
           cell: (item) => item.alias,
+        },
+        {
+          id: 'country',
+          header: 'Country',
+          cell: (item) => item.country || '-',
         },
         {
           id: 'role',
@@ -177,6 +184,10 @@ const ProfilesTable = ({
             counter={`(${filteredProfiles.length})`}
             description={selectedItems.length > 0 ? `${selectedItems.length} selected` : undefined}
             actions={
+              <SpaceBetween direction="horizontal" size="xs">
+              <Button onClick={onNewBasicUser} disabled={selectedItems.length > 0}>
+                New basic user
+              </Button>
               <ButtonDropdown
                 items={[
                   { text: 'Invite user', disabled: selectedItems.length > 0, id: 'invite' },
@@ -201,6 +212,7 @@ const ProfilesTable = ({
               >
                 Actions
               </ButtonDropdown>
+              </SpaceBetween>
             }
           >
             Users

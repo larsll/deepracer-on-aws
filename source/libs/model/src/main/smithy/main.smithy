@@ -99,6 +99,7 @@ resource ProfileResource {
     operations: [
         ListProfiles
         CreateProfile
+        CreateBasicProfile
         UpdateGroupMembership
         DeleteProfileModels
     ]

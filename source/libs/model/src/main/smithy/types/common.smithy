@@ -2,7 +2,7 @@ $version: "2"
 
 namespace com.aws.solutions.deepracer
 
-@pattern("^[A-Za-z0-9]{15}$")
+@pattern("^[A-Za-z0-9-]{15}$")
 string ResourceIdentifier // Nano ID : https://github.com/ai/nanoid
 
 @range(min: 0, max: 1)

@@ -18,6 +18,7 @@ export enum DynamoDBItemAttribute {
   AVATAR = 'avatar',
   PROFILE_ID = 'profileId',
   EMAIL_ADDRESS = 'emailAddress',
+  COUNTRY = 'country',
   MAX_TOTAL_COMPUTE_MINUTES = 'maxTotalComputeMinutes',
   MODEL_COUNT = 'modelCount',
   MAX_MODEL_COUNT = 'maxModelCount',

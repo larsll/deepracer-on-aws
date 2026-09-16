@@ -19,3 +19,25 @@ const nanoid = customAlphabet(awsSafeAlphabet, deepRacerIndyAppConfig.dynamoDB.r
 export const generateResourceId = () => {
   return nanoid() as ResourceId;
 };
+
+/**
+ * Prefix for basic (display-only) user IDs. Combined with a random suffix it
+ * produces exactly 15 characters matching RESOURCE_ID_REGEX.
+ *
+ * Lowercase-only alphabet is intentional: ElectroDB lowercases composite key
+ * values when building the DynamoDB PK, so the stored attribute value and the
+ * PK must use the same case to ensure deletes target the correct item.
+ */
+const BASIC_USER_PREFIX = 'dr-user-';
+const basicUserSuffixLength = deepRacerIndyAppConfig.dynamoDB.resourceIdLength - BASIC_USER_PREFIX.length; // 7
+const lowercaseAlphanumeric = 'abcdefghijklmnopqrstuvwxyz0123456789';
+const basicNanoid = customAlphabet(lowercaseAlphanumeric, basicUserSuffixLength);
+
+/**
+ * Generates a recognisable resource ID for basic (no-login) user profiles.
+ * Format: "dr-user-" + 7 lowercase alphanumeric chars = 15 chars total.
+ * Example: "dr-user-ab3de7g"
+ */
+export const generateBasicProfileId = () => {
+  return (BASIC_USER_PREFIX + basicNanoid()) as ResourceId;
+};
