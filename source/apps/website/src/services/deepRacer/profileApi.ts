@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+  CreateBasicProfileCommand,
+  CreateBasicProfileCommandInput,
+  CreateBasicProfileCommandOutput,
   CreateProfileCommand,
   CreateProfileCommandInput,
   CreateProfileCommandOutput,
@@ -25,6 +28,14 @@ import {
 
 import { DeepRacerApiQueryTagType } from './constants.js';
 import { deepRacerApi, paginatedQuery } from './deepRacerApi.js';
+
+export const createBasicProfile = {
+  createBasicProfileCommand: (input: CreateBasicProfileCommandInput) => ({
+    command: new CreateBasicProfileCommand(input),
+    displayNotificationOnError: false,
+  }),
+  createBasicProfileTransformResponse: (response: CreateBasicProfileCommandOutput) => response.message,
+};
 
 export const createProfile = {
   createProfileCommand: (input: CreateProfileCommandInput) => ({
@@ -67,6 +78,11 @@ export const updateGroupMembership = {
 
 export const profileApi = deepRacerApi.injectEndpoints({
   endpoints: (build) => ({
+    createBasicProfile: build.mutation<string, CreateBasicProfileCommandInput>({
+      query: createBasicProfile.createBasicProfileCommand,
+      transformResponse: createBasicProfile.createBasicProfileTransformResponse,
+      invalidatesTags: [{ type: DeepRacerApiQueryTagType.PROFILE }],
+    }),
     createProfile: build.mutation<string, CreateProfileCommandInput>({
       query: createProfile.createProfileCommand,
       transformResponse: createProfile.createProfileTransformResponse,
@@ -108,6 +124,7 @@ export const profileApi = deepRacerApi.injectEndpoints({
 });
 
 export const {
+  useCreateBasicProfileMutation,
   useCreateProfileMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,

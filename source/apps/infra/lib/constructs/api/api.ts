@@ -79,6 +79,7 @@ export class Api extends Construct {
       CreateEvaluation: 'api/handlers/createEvaluation',
       CreateLeaderboard: 'api/handlers/createLeaderboard',
       CreateModel: 'api/handlers/createModel',
+      CreateBasicProfile: 'api/handlers/createBasicProfile',
       CreateProfile: 'api/handlers/createProfile',
       CreateSubmission: 'api/handlers/createSubmission',
       DeclareWinner: 'api/handlers/declareWinner',
@@ -569,6 +570,19 @@ export class Api extends Construct {
       functions.CreateProfile.addToRolePolicy(
         new PolicyStatement({
           actions: ['cognito-idp:AdminCreateUser', 'cognito-idp:AdminAddUserToGroup', 'cognito-idp:AdminDeleteUser'],
+          resources: [props.userPool.userPoolArn],
+        }),
+      );
+
+      // Grant CreateBasicProfile function permission to check admin status and create/manage basic users
+      functions.CreateBasicProfile.addToRolePolicy(
+        new PolicyStatement({
+          actions: [
+            'cognito-idp:AdminListGroupsForUser',
+            'cognito-idp:AdminCreateUser',
+            'cognito-idp:AdminAddUserToGroup',
+            'cognito-idp:AdminDeleteUser',
+          ],
           resources: [props.userPool.userPoolArn],
         }),
       );

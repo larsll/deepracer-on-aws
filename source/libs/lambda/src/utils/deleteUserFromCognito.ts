@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { UserNotFoundException } from '@aws-sdk/client-cognito-identity-provider';
 import { ResourceId } from '@deepracer-indy/database';
 import { logger } from '@deepracer-indy/utils';
 
@@ -25,6 +26,11 @@ export async function deleteUserFromCognito(profileId: ResourceId): Promise<void
     await cognitoClient.send(command);
     logger.info('Deleted user from Cognito', { profileId });
   } catch (error) {
+    if (error instanceof UserNotFoundException) {
+      // Basic users have no Cognito account — this is expected, not an error.
+      logger.info('User not found in Cognito (likely a basic user), skipping Cognito deletion', { profileId });
+      return;
+    }
     logger.error('Failed to delete user from Cognito', { profileId, error });
     throw error;
   }
