@@ -27,9 +27,9 @@
       "cache": true,
       "executor": "nx:run-commands",
       "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/smithy-build-gradle.json"],
-      "outputs": ["{workspaceRoot}/libs/typescript-client/src/**/*"],
+      "outputs": ["{workspaceRoot}/libs/typescript-client/src/**/*", "{workspaceRoot}/libs/typescript-client/package.json"],
       "options": {
-        "command": "cp -r src '../../../../../../typescript-client'",
+        "command": "mkdir -p '../../../../../../typescript-client' && cp -r src package.json '../../../../../../typescript-client'",
         "cwd": "libs/model/build/smithyprojections/model/source/typescript-codegen"
       },
       "dependsOn": ["generate"]
@@ -38,9 +38,9 @@
       "cache": true,
       "executor": "nx:run-commands",
       "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/smithy-build-gradle.json"],
-      "outputs": ["{workspaceRoot}/libs/typescript-server-client/src/**/*"],
+      "outputs": ["{workspaceRoot}/libs/typescript-server-client/src/**/*", "{workspaceRoot}/libs/typescript-server-client/package.json"],
       "options": {
-        "command": "cp -r src '../../../../../../typescript-server-client'",
+        "command": "mkdir -p '../../../../../../typescript-server-client' && cp -r src package.json '../../../../../../typescript-server-client'",
         "cwd": "libs/model/build/smithyprojections/model/source/typescript-ssdk-codegen"
       },
       "dependsOn": ["generate"]

@@ -14,6 +14,8 @@ __pycache__/
 .ruff_cache/
 
 # Derived build assets
+source/libs/typescript-client/
+source/libs/typescript-server-client/
 **/deployment/global-s3-assets
 **/deployment/regional-s3-assets
 **/deployment/open-source

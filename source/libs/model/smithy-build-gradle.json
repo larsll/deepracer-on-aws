@@ -7,13 +7,39 @@
       "packageManager": "npm",
       "packageVersion": "1.0.0",
       "requiredMemberMode": "strict",
-      "useLegacyAuth": true
+      "useLegacyAuth": true,
+      "packageJson": {
+        "main": "./src/index.ts",
+        "module": "./src/index.ts",
+        "scripts": {
+          "build": "exit 0",
+          "build:cjs": "exit 0",
+          "build:es": "exit 0",
+          "build:types": "exit 0",
+          "build:types:downlevel": "exit 0",
+          "clean": "exit 0",
+          "prepack": "exit 0"
+        }
+      }
     },
     "typescript-ssdk-codegen": {
       "package": "@deepracer-indy/typescript-server-client",
       "packageManager": "npm",
       "packageVersion": "1.0.0",
-      "requiredMemberMode": "strict"
+      "requiredMemberMode": "strict",
+      "packageJson": {
+        "main": "./src/index.ts",
+        "module": "./src/index.ts",
+        "scripts": {
+          "build": "exit 0",
+          "build:cjs": "exit 0",
+          "build:es": "exit 0",
+          "build:types": "exit 0",
+          "build:types:downlevel": "exit 0",
+          "clean": "exit 0",
+          "prepack": "exit 0"
+        }
+      }
     },
     "openapi": {
       "apiGatewayDefaults": "2023-08-11",
